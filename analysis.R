@@ -21,9 +21,16 @@ capWords=function(s, strict=FALSE) {
 ## ----------------------------------------------
 datadir="docs/"
 cellW2=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+annW2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
 tmpC=rep("",ncol(cellW2))
-annW2=data.frame(feature=paste("feat_",1:ncol(cellW2),sep=""),type=tmpC,stringsAsFactors=F)
+annW2=data.frame(feature=annW2[,1],type=tmpC,stringsAsFactors=F)
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("cell"))=="cell")]="cell"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("mito"))=="mito")]="mitochondria"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
 annCellW2=data.frame(id=paste("w2_",1:nrow(cellW2),sep=""),stringsAsFactors=F)
+colnames(cellW2)=annW2$feature
+rownames(cellW2)=annCellW2$id
 
 datadir="docs/"
 cellW=read.table(paste(datadir,"WT_Plate1WellA1-K16_MeasurementsNUMBERSONLY.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
