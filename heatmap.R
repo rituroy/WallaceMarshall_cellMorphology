@@ -52,8 +52,8 @@ for (datVer in c("w906","w5969")) {
 
     typeFlag="cell"
 
-    sepFClustFlag=T ## NOT USED for typeFlag=""
     sepFClustFlag=F
+    sepFClustFlag=T ## NOT USED for typeFlag=""
     
     type2Flag="_noisyFeat"; typeList=""; centrFlag=""; scaleList=""
     type2Flag="_reducedFeatPC_PC"; typeList=sort(unique(ann$type)); centrFlag=""; scaleList=""
@@ -164,14 +164,14 @@ for (datVer in c("w906","w5969")) {
     subsetFList=""
     type2Flag="_reducedBioFeatPC"; typeList=""
     type2Flag=""; typeList=""
-    type2Flag=""; typeList="cell"
     type2Flag=""; typeList=c("",sort(unique(ann$type)))
+    type2Flag=""; typeList="cell"
     distMethod="kendall"
     distMethod="pearson"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
     orderFlag[1]="_wtOrd"; datadir2[1]=""
     orderFlag[1]=""
-
+    
     for (orderSam in orderSamList) {
         orderFlag[2]=orderSam
         orderFlag[2]=""
