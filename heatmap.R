@@ -4,9 +4,14 @@
 #load("tmp_w3830.RData"); datVer="w3830"
 load("tmp_w5969.RData")
 datVer="w906"
-for (datVer in c("w906","w5969")) {
+datVerList=c("w906","w5969")
+datVerList=c("w906")
+for (datVer in datVerList) {
     if (datVer=="w5969") {load("tmp_w5969.RData"); datVer="w5969"}
-
+    
+    exampleFlag=T
+    exampleFlag=F
+    
     annRpart=read.table(paste("rpart.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
 
     library(marray)
@@ -52,8 +57,8 @@ for (datVer in c("w906","w5969")) {
 
     typeFlag="cell"
 
-    sepFClustFlag=F
     sepFClustFlag=T ## NOT USED for typeFlag=""
+    sepFClustFlag=F
     
     type2Flag="_noisyFeat"; typeList=""; centrFlag=""; scaleList=""
     type2Flag="_reducedFeatPC_PC"; typeList=sort(unique(ann$type)); centrFlag=""; scaleList=""
@@ -77,7 +82,7 @@ for (datVer in c("w906","w5969")) {
     distMethod="spearman"
     distMethod="kendall"
     distMethod="pearson"
-
+    
     classDistFlag="euclidean"
     classDistFlag="kendall"
 
@@ -114,7 +119,7 @@ for (datVer in c("w906","w5969")) {
 
     getCorFlag=T
     getCorFlag=F
-
+    
     orderFlag=rep("",2)
     datadir2=rep("",2)
 
@@ -164,10 +169,11 @@ for (datVer in c("w906","w5969")) {
     subsetFList=""
     type2Flag="_reducedBioFeatPC"; typeList=""
     type2Flag=""; typeList=""
-    type2Flag=""; typeList=c("",sort(unique(ann$type)))
     type2Flag=""; typeList="cell"
-    distMethod="kendall"
+    type2Flag=""; typeList=c(sort(unique(ann$type)))
+    type2Flag=""; typeList=c("",sort(unique(ann$type)))
     distMethod="pearson"
+    distMethod="kendall"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
     orderFlag[1]="_wtOrd"; datadir2[1]=""
     orderFlag[1]=""
@@ -226,6 +232,45 @@ for (datVer in c("w906","w5969")) {
                     featId1=1:nrow(annW2)
                 }
                 )
+                
+                if (exampleFlag) {
+                    i=order(apply(cell,2,sd,na.rm=T),decreasing=T)
+                    j=order(apply(cell,1,sd,na.rm=T),decreasing=T)
+                    cell=cell[j,i]
+                    ann=ann[i,]
+                    annCell=annCell[j,]
+                    featId1=1:nrow(ann)
+                    
+                    grpUniq=unique(ann$type)
+                    i=c()
+                    for (gId in 1:length(grpUniq)) {
+                        i=c(i,which(ann$type==grpUniq[gId])[1:20])
+                    }
+                    j=1:50
+                    cell=cell[j,i]
+                    ann=ann[i,]
+                    annCell=annCell[j,]
+                    featId1=1:nrow(ann)
+                }
+                
+                if (F) {
+                    arrayData=cell
+                    centr=apply(arrayData,1,median,na.rm=T)
+                    for (i in 1:ncol(arrayData)) {
+                        arrayData[,i]=arrayData[,i]-centr[i]
+                    }
+                    scal=apply(arrayData,1,sd,na.rm=T)
+                    for (i in 1:ncol(arrayData)) {
+                        arrayData[,i]=arrayData[,i]/scal[i]
+                    }
+                    arrayData2=arrayData
+                    for (j in 1:ncol(arrayData)) {
+                        meanThis=mean(arrayData[,j],na.rm=T)
+                        arrayData[is.na(arrayData[,j]),j]=meanThis
+                    }
+                    cell=arrayData
+                }
+                
                 if (type2Flag=="_reducedBioFeatPC") {
                     sdFeat=sdFeatPc
                     sdSam=sdSamPc
