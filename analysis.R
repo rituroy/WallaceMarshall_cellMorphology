@@ -21,9 +21,23 @@ capWords=function(s, strict=FALSE) {
 ## ----------------------------------------------
 datadir="docs/"
 cellW2=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-annW2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-tmpC=rep("",ncol(cellW2))
-annW2=data.frame(feature=annW2[,1],type=tmpC,stringsAsFactors=F)
+annW2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+for (k in 1:ncol(annW2)) if (is.character(annW2[,k])) annW2[,k]=gsub("'","",annW2[,k])
+out=as.data.frame(t(sapply(annW2[which(annW2[,11]!=""),11],function(x) {
+    y=strsplit(x," = ")[[1]]
+    gsub(" |:","",y)
+},USE.NAMES=F)),stringsAsFactors=F)
+names(out)=c("featId","featUniq")
+annW2=annW2[,c(1,7)]
+names(annW2)=c("feature","featId")
+annW2$featUniq=out$featUniq[match(annW2$featId,out$featId)]
+rm(out)
+annW2$type=""
+if (F) {
+    annW2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+    tmpC=rep("",ncol(cellW2))
+    annW2=data.frame(feature=annW2[,1],type=tmpC,stringsAsFactors=F)
+}
 annW2$type[which(substr(tolower(annW2$feature),1,nchar("cell"))=="cell")]="cell"
 annW2$type[which(substr(tolower(annW2$feature),1,nchar("mito"))=="mito")]="mitochondria"
 annW2$type[which(substr(tolower(annW2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
@@ -34,6 +48,7 @@ rownames(cellW2)=annCellW2$id
 annCellW2$junk=0
 cellW2=as.matrix(cellW2)
 
+## -------------------
 datadir="docs/"
 cellW=read.table(paste(datadir,"WT_Plate1WellA1-K16_MeasurementsNUMBERSONLY.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
 
@@ -288,13 +303,15 @@ if (F) {
 	n=ncol(cell)
 	tmp=vector(mode="numeric",length=n*(n-1)/2)
 	tmpC=vector(mode="character",length=n*(n-1)/2)
-	corInfo=data.frame(feature1=tmpC,feature2=tmpC,corKend=tmp,stringsAsFactors=F)
+	corInfo=data.frame(feature1=tmpC,featUniq1=tmpC,feature2=tmpC,featUniq2=tmpC,corKend=tmp,stringsAsFactors=F)
 	k=1
 	for (k1 in 1:(nrow(corMat)-1)) {
 		for (k2 in (k1+1):nrow(corMat)) {
 			corInfo$feature1[k]=rownames(corMat)[k1]
 			corInfo$feature2[k]=rownames(corMat)[k2]
-			corInfo$corKend[k]=corMat[k1,k2]
+            corInfo$featUniq1[k]=ann$featUniq[match(rownames(corMat)[k1],annW2$feature)]
+            corInfo$featUniq2[k]=ann$featUniq[match(rownames(corMat)[k2],annW2$feature)]
+            corInfo$corKend[k]=corMat[k1,k2]
 			k=k+1
 		}
 	}
@@ -314,6 +331,20 @@ corInfo[abs(corInfo$corKend)==1,]
 #56761 NucEquivDiameter           NucZernike1       1
 #80741      MitoMaxArea      MitoFusedMaxArea       1
 #80810      MitoMinArea MitoFragmentedMinArea       1
+
+table(highCorr=abs(corInfo$corKend)>=.8,sameFeat=corInfo$featUniq1==corInfo$featUniq2)
+"
+            sameFeat
+highCorr  FALSE  TRUE
+    FALSE 18222  2427
+    TRUE     26   235
+"
+xlim=c(0,1); ylim=c(0,4000)
+png(paste("corKend_featureGroup",cohort,".png",sep=""),width=2*480,height=480)
+par(mfrow=c(1,2))
+hist(abs(corInfo$corKend[which(corInfo$featUniq1==corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main="Features from same group",xlab="Absolute Kendall's correlation coefficient")
+hist(abs(corInfo$corKend[which(corInfo$featUniq1!=corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main="Features from different groups",xlab="Absolute Kendall's correlation coefficient")
+dev.off()
 
 ## -------------------
 
@@ -401,7 +432,7 @@ for (typeFlag in sort(unique(ann$type))) {
 
 ####################################################################
 ####################################################################
-## NOT USED
+## NOT USED. Check
 ## Heatmap
 
 i=which(ann$feature=="CellSumIntensity")
@@ -1050,6 +1081,56 @@ for (thisFlag in c("_mycRas","_wt")) {
     abline(c(0,1))
     dev.off()
 }
+
+
+## -------------------
+## Test for association of clusters defined by the 3 feature types
+
+cohort="_wt906"
+
+datadir=""
+
+typeList=sort(unique(ann$type))
+nClustList=2:10
+
+switch(cohort,
+    "_wt906"={
+        cell=cellW2
+        ann=annW2
+        annCell=annCellW2
+    }
+)
+
+out=matrix(nrow=nrow(annCell),ncol=length(nClustList)*length(typeList),dimnames=list(annCell$id,paste("clustId_",nClustList,"_",rep(typeList,each=length(nClustList)),sep="")))
+for (typeFlag in typeList) {
+    clustInfo=read.table(paste(datadir,cohort,"_",typeFlag,"_kendall/clusterInfoSample",cohort,"_",typeFlag,"_kendall.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+    for (nClust in nClustList) {
+        out[match(clustInfo$id,rownames(out)),paste("clustId_",nClust,"_",typeFlag,sep="")]=clustInfo[,paste("clustId_",nClust,sep="")]
+    }
+}
+
+n=length(typeList)*(length(typeList)-1)/2
+pvalMat=matrix(nrow=length(nClustList),ncol=n)
+for (cId in 1:length(nClustList)) {
+    nClust=nClustList[cId]
+    nm=rep("",n)
+    k=1
+    for (k1 in 1:(length(typeList)-1)) {
+        for (k2 in (k1+1):length(typeList)) {
+            x=table(out[,paste("clustId_",nClust,"_",typeList[k1],sep="")],out[,paste("clustId_",nClust,"_",typeList[k2],sep="")])
+            #print(chisq.test(x))
+            ## Fisher's exact test giving error
+            pvalMat[cId,k]=chisq.test(x)$p.value
+            nm[k]=paste(typeList[k1],"_",typeList[k2],sep="")
+            k=k+1
+        }
+    }
+}
+colnames(pvalMat)=nm
+tbl=cbind(id=rownames(pvalMat),as.data.frame(pvalMat))
+rownames(tbl)=NULL
+write.table(tbl, paste("pvalFeature_forClusterSample",cohort,typeflag,"_reducedBioFeatPC_kendall.txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
+
 
 ####################################################################
 ####################################################################

@@ -1101,6 +1101,17 @@ for (datVer in datVerList) {
                                     
                                     tbl=cbind(phen2[clustC$order,],clustId,order=1:nrow(phen2))
                                 }
+                                out=matrix(nrow=nrow(tbl),ncol=9)
+                                colnames(out)=paste("clustId_",2:10,sep="")
+                                for (kk in 1:ncol(out)) {
+                                    clustId=cutree(clustC,k=as.integer(sub("clustId_","",colnames(out)[kk])))[clustC$order]
+                                    k1=which(!duplicated(clustId))
+                                    for (k in 1:length(k1)) {
+                                        clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
+                                    }
+                                    out[,kk]=clustId
+                                }
+                                tbl=cbind(tbl,out)
                                 write.table(tbl, paste(subDir,"clusterInfoSample",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                             } ## for (type3Flag in type3List) {
                             
