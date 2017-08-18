@@ -48,6 +48,36 @@ rownames(cellW2)=annCellW2$id
 annCellW2$junk=0
 cellW2=as.matrix(cellW2)
 
+## ----------------------------------------------
+datadir="docs/"
+cellM2=read.table(paste(datadir,"MYCRAS_20150522_RowA1-6_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+annM2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+for (k in 1:ncol(annM2)) if (is.character(annM2[,k])) annM2[,k]=gsub("'","",annM2[,k])
+out=as.data.frame(t(sapply(annM2[which(annM2[,11]!=""),11],function(x) {
+    y=strsplit(x," = ")[[1]]
+    gsub(" |:","",y)
+},USE.NAMES=F)),stringsAsFactors=F)
+names(out)=c("featId","featUniq")
+annM2=annM2[,c(1,7)]
+names(annM2)=c("feature","featId")
+annM2$featUniq=out$featUniq[match(annM2$featId,out$featId)]
+rm(out)
+annM2$type=""
+if (F) {
+    annM2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+    tmpC=rep("",ncol(cellM2))
+    annM2=data.frame(feature=annM2[,1],type=tmpC,stringsAsFactors=F)
+}
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("cell"))=="cell")]="cell"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("mito"))=="mito")]="mitochondria"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
+annCellM2=data.frame(id=paste("m2_",1:nrow(cellM2),sep=""),stringsAsFactors=F)
+colnames(cellM2)=annM2$feature
+rownames(cellM2)=annCellM2$id
+annCellM2$junk=0
+cellM2=as.matrix(cellM2)
+
 ## -------------------
 datadir="docs/"
 cellW=read.table(paste(datadir,"WT_Plate1WellA1-K16_MeasurementsNUMBERSONLY.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
@@ -241,24 +271,36 @@ annW=ann
 ## Pair-wise correlation of samples and features
 
 cohort="_wt906"
+cohort="_mycRas105"
 
 distMethod="pearson"
 distMethod="kendall"
 
-ann=annW
 switch(cohort,
     "_mycRas"={
+        cohortName="Myc/Ras"
         cell=cellM
+        ann=annW
     },
     "_wt"={
+        cohortName="Wildtype"
         cell=cellW
+        ann=annW
     },
     "_mycRasWt"={
+        cohortName="Myc/Ras & Wildtype"
         cell=cellMW
+        ann=annW
     },
     "_wt906"={
+        cohortName="Wildtype 906"
         cell=cellW2
         ann=annW2
+    },
+    "_mycRas105"={
+        cohortName="Myc/Ras 105"
+        cell=cellM2
+        ann=annM2
     }
 )
 #cell=cell[1:10,]
@@ -297,7 +339,7 @@ if (F) {
     #corMat[abs(corMat)==1]
     
     png(paste("pairwiseCorFeature_kendall",cohort,".png",sep=""))
-    plot(sort(abs(c(corMat[lower.tri(corMat)]))))
+    plot(sort(abs(c(corMat[lower.tri(corMat)]))),main=cohortName)
     dev.off()
 
 	n=ncol(cell)
@@ -319,6 +361,7 @@ if (F) {
 }
 
 datadir="results/"
+datadir=""
 sumInfo=read.table(paste(datadir,"summaryFeature",cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
 load(file=paste(datadir,"corMat.RData",sep=""))
 load(file=paste(datadir,"corMatSam.RData",sep=""))
@@ -342,8 +385,8 @@ highCorr  FALSE  TRUE
 xlim=c(0,1); ylim=c(0,4000)
 png(paste("corKend_featureGroup",cohort,".png",sep=""),width=2*480,height=480)
 par(mfrow=c(1,2))
-hist(abs(corInfo$corKend[which(corInfo$featUniq1==corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main="Features from same group",xlab="Absolute Kendall's correlation coefficient")
-hist(abs(corInfo$corKend[which(corInfo$featUniq1!=corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main="Features from different groups",xlab="Absolute Kendall's correlation coefficient")
+hist(abs(corInfo$corKend[which(corInfo$featUniq1==corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main=paste(cohortName,": Features from same group",sep=""),xlab="Absolute Kendall's correlation coefficient")
+hist(abs(corInfo$corKend[which(corInfo$featUniq1!=corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main=paste(cohortName,": Features from different groups",sep=""),xlab="Absolute Kendall's correlation coefficient")
 dev.off()
 
 ## -------------------
@@ -1087,6 +1130,7 @@ for (thisFlag in c("_mycRas","_wt")) {
 ## Test for association of clusters defined by the 3 feature types
 
 cohort="_wt906"
+cohort="_mycRas105"
 
 datadir=""
 
@@ -1098,6 +1142,11 @@ switch(cohort,
         cell=cellW2
         ann=annW2
         annCell=annCellW2
+    },
+    "_mycRas105"={
+        cell=cellM2
+        ann=annM2
+        annCell=annCellM2
     }
 )
 
@@ -1236,7 +1285,7 @@ for (typeFlag in sort(unique(ann$type))) {
 		}
 		
 		if (featureFlag=="_reducedFeatMean") {
-## CHECK THIS !!!
+            ## CHECK THIS !!!
 			switch(typeFlag,
 				   "cell"={
 				   fit1=fit
@@ -1268,7 +1317,7 @@ for (typeFlag in sort(unique(ann$type))) {
 		}
 		
 		png(paste("biPlot_pca",fNameOut,"_%1d.png",sep=""))
-#		par(mfcol=c(2,2))
+        #par(mfcol=c(2,2))
 		biplot(fit,choices=c(1,2),main=paste("PCA biplot: ",header,sep=""))
 		biplot(fit,choices=c(1,3),main=paste("PCA biplot: ",header,sep=""))
 		biplot(fit,choices=c(2,3),main=paste("PCA biplot: ",header,sep=""))

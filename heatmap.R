@@ -5,6 +5,7 @@
 load("tmp_w5969.RData")
 datVer="w906"
 datVerList=c("w906","w5969")
+datVerList=c("m105")
 datVerList=c("w906")
 for (datVer in datVerList) {
     if (datVer=="w5969") {load("tmp_w5969.RData"); datVer="w5969"}
@@ -47,18 +48,21 @@ for (datVer in datVerList) {
     datadir="results/cor/"
     switch(datVer,
         "w3830"={
-            datadir="results/w3830/cor/"
+            datadir="results/wt3830/cor/"
         },
         "w906"={
-            datadir="results/w906/cor/"
+            datadir="results/wt906/cor/"
+        },
+        "m105"={
+            datadir="results/mycRas105/cor/"
         }
     )
     datadir=""
 
     typeFlag="cell"
 
-    sepFClustFlag=T ## NOT USED for typeFlag=""
     sepFClustFlag=F
+    sepFClustFlag=T ## NOT USED for typeFlag=""
     
     type2Flag="_noisyFeat"; typeList=""; centrFlag=""; scaleList=""
     type2Flag="_reducedFeatPC_PC"; typeList=sort(unique(ann$type)); centrFlag=""; scaleList=""
@@ -73,9 +77,9 @@ for (datVer in datVerList) {
     type2Flag="_reducedBioFeatMean"; typeList=c("",sort(unique(ann$type))); centrFlag=""; scaleList=""
     type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type))); centrFlag=""; scaleList=""
     typeList=sort(unique(ann$type))
-    typeList=c("",sort(unique(ann$type)))
     typeList=""
-
+    typeList=c("",sort(unique(ann$type)))
+    
     sampleBar=""
     sampleBar="cluster"
 
@@ -130,10 +134,13 @@ for (datVer in datVerList) {
     datadir2[1]=""
     switch(datVer,
         "w3830"={
-            datadir2[1]=paste("results/w3830/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
+            datadir2[1]=paste("results/wt3830/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
         },
         "w906"={
-            datadir2[1]=paste("results/w906/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
+            datadir2[1]=paste("results/wt906/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
+        },
+        "m105"={
+            datadir2[1]=paste("results/mycRas105/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
         }
     )
 
@@ -141,10 +148,13 @@ for (datVer in datVerList) {
     datadir2[2]=paste("results/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
     switch(datVer,
         "w3830"={
-            datadir2[2]=paste("results/w3830/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
+            datadir2[2]=paste("results/wt3830/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
         },
         "w906"={
-            datadir2[2]=paste("results/w906/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
+            datadir2[2]=paste("results/wt906/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
+        },
+        "m105"={
+            datadir2[2]=paste("results/mycRas105/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
         }
     )
     orderFlag[2]=""
@@ -164,6 +174,9 @@ for (datVer in datVerList) {
         },
         "w906"={
             cohortList=c("_wt906")
+        },
+        "m105"={
+            cohortList=c("_mycRas105")
         }
     )
     subsetFList=""
@@ -177,6 +190,7 @@ for (datVer in datVerList) {
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
     orderFlag[1]="_wtOrd"; datadir2[1]=""
     orderFlag[1]=""
+    orderFlag[1]="_mycRas105Ord"; datadir2[1]=""
     
     for (orderSam in orderSamList) {
         orderFlag[2]=orderSam
@@ -194,43 +208,50 @@ for (datVer in datVerList) {
                 }
                 
                 switch(cohort,
-                "_mycRas"={
-                    cohortName="Myc/Ras"
-                    cell=cellM
-                    cell_rbf=cell_rbfM
-                    cell_rbfm=cell_rbfmM
-                    sdSamPc=sdSamPcM
-                    sdSamMn=sdSamMnM
-                    sdFeatPc=sdFeatPcM
-                    sdFeatMn=sdFeatMnM
-                },
-                "_wt"={
-                    cohortName="Wildtype"
-                    cell=cellW
-                    cell_rbf=cell_rbfW
-                    cell_rbfm=cell_rbfmW
-                    sdSamPc=sdSamPcW
-                    sdSamMn=sdSamMnW
-                    sdFeatPc=sdFeatPcW
-                    sdFeatMn=sdFeatMnW
-                },
-                "_mycRasWt"={
-                    cohortName="Myc/Ras & Wildtype"
-                    cell=cellMW
-                    cell_rbf=cell_rbfMW
-                    cell_rbfm=cell_rbfmMW
-                    sdSamPc=sdSamPcMW
-                    sdSamMn=sdSamMnMW
-                    sdFeatPc=sdFeatPcMW
-                    sdFeatMn=sdFeatMnMW
-                },
-                "_wt906"={
-                    cohortName="Wildtype 906"
-                    cell=cellW2
-                    ann=annW2
-                    annCell=annCellW2
-                    featId1=1:nrow(annW2)
-                }
+                    "_mycRas"={
+                        cohortName="Myc/Ras"
+                        cell=cellM
+                        cell_rbf=cell_rbfM
+                        cell_rbfm=cell_rbfmM
+                        sdSamPc=sdSamPcM
+                        sdSamMn=sdSamMnM
+                        sdFeatPc=sdFeatPcM
+                        sdFeatMn=sdFeatMnM
+                    },
+                    "_wt"={
+                        cohortName="Wildtype"
+                        cell=cellW
+                        cell_rbf=cell_rbfW
+                        cell_rbfm=cell_rbfmW
+                        sdSamPc=sdSamPcW
+                        sdSamMn=sdSamMnW
+                        sdFeatPc=sdFeatPcW
+                        sdFeatMn=sdFeatMnW
+                    },
+                    "_mycRasWt"={
+                        cohortName="Myc/Ras & Wildtype"
+                        cell=cellMW
+                        cell_rbf=cell_rbfMW
+                        cell_rbfm=cell_rbfmMW
+                        sdSamPc=sdSamPcMW
+                        sdSamMn=sdSamMnMW
+                        sdFeatPc=sdFeatPcMW
+                        sdFeatMn=sdFeatMnMW
+                    },
+                    "_wt906"={
+                        cohortName="Wildtype 906"
+                        cell=cellW2
+                        ann=annW2
+                        annCell=annCellW2
+                        featId1=1:nrow(annW2)
+                    },
+                    "_mycRas105"={
+                        cohortName="Myc/Ras 105"
+                        cell=cellM2
+                        ann=annM2
+                        annCell=annCellM2
+                        featId1=1:nrow(annM2)
+                    }
                 )
                 
                 if (exampleFlag) {
@@ -821,7 +842,7 @@ for (datVer in datVerList) {
                                     for (type4Flag in sort(unique(annFeatAll$type))) {
                                         fNameOut4=paste(fNameOut,"_",type4Flag,sep="")
                                         arrayData2=arrayData[which(annFeat$type==type4Flag),]
-                                        if (orderFlag[1]%in%c("_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
+                                        if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
                                             #fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut2)))))
                                             fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],sub("Ord","",orderFlag[1]),fNameOut2)))))
                                             #fNameOut4=sub("spearman","kendall",sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut2))))))
@@ -862,7 +883,7 @@ for (datVer in datVerList) {
                                     clustR=NA
                                     nClust[1]=NA
                                 } else {
-                                    if (orderFlag[1]%in%c("_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
+                                    if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
                                         #fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut)))))
                                         fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],sub("Ord","",orderFlag[1]),fNameOut)))))
                                         clustInfo=read.table(paste(datadir2[1],fNameOut4,"/clusterInfoFeature",fNameOut4,ifelse(type3Flag=="","","_"),type3Flag,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
@@ -1048,7 +1069,7 @@ for (datVer in datVerList) {
                                 }
                                 subDir=paste(subDir,"/",sep="")
                                 if (outFormat=="png") {
-                                    if (orderFlag[1]%in%c("_mycRasOrd","_wtOrd","_wt_classSet1Ord") & sepFClustFlag & type3Flag!=typeFlag) {
+                                    if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord") & sepFClustFlag & type3Flag!=typeFlag) {
                                         margins=c(23,36)
                                     } else {
                                         margins=c(6,1)
@@ -1100,18 +1121,18 @@ for (datVer in datVerList) {
                                     }
                                     
                                     tbl=cbind(phen2[clustC$order,],clustId,order=1:nrow(phen2))
-                                }
-                                out=matrix(nrow=nrow(tbl),ncol=9)
-                                colnames(out)=paste("clustId_",2:10,sep="")
-                                for (kk in 1:ncol(out)) {
-                                    clustId=cutree(clustC,k=as.integer(sub("clustId_","",colnames(out)[kk])))[clustC$order]
-                                    k1=which(!duplicated(clustId))
-                                    for (k in 1:length(k1)) {
-                                        clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
+                                    out=matrix(nrow=nrow(tbl),ncol=9)
+                                    colnames(out)=paste("clustId_",2:10,sep="")
+                                    for (kk in 1:ncol(out)) {
+                                        clustId=cutree(clustC,k=as.integer(sub("clustId_","",colnames(out)[kk])))[clustC$order]
+                                        k1=which(!duplicated(clustId))
+                                        for (k in 1:length(k1)) {
+                                            clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
+                                        }
+                                        out[,kk]=clustId
                                     }
-                                    out[,kk]=clustId
+                                    tbl=cbind(tbl,out)
                                 }
-                                tbl=cbind(tbl,out)
                                 write.table(tbl, paste(subDir,"clusterInfoSample",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                             } ## for (type3Flag in type3List) {
                             

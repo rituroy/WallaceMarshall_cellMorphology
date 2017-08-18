@@ -3,25 +3,36 @@ library("Rtsne")
 
 ## -------------------------------
 cohort="_wt906"
+cohort="_mycRas105"
 
 colList=c("brown","red","orange","yellow","green","cyan","skyblue","blue","pink","magenta","purple","darkgreen")
 centrFlag=""
 scaleFlag=""
 
-typeList=c("",sort(unique(annW2$type)))
+switch(cohort,
+    "_wt906"={
+        cell=cellW2
+        ann=annW2
+        annCell=annCellW2
+    },
+    "_mycRas105"={
+        cell=cellM2
+        ann=annM2
+        annCell=annCellM2
+    }
+)
+typeList=c("",sort(unique(ann$type)))
 
 corThres=.8
 sdThres=.05
 
-x=apply(cellW2,2,function(x) {mean(!is.na(x))})
-cell=apply(cellW2,2,function(x) {
+x=apply(cell,2,function(x) {mean(!is.na(x))})
+cell=apply(cell,2,function(x) {
     y=x
     y0=mean(y,na.rm=T)
     y[is.na(y)]=y0
     y
 })
-ann=annW2
-annCell=annCellW2
 datadir=""
 corInfo=read.table(paste(datadir,"corrFeature",cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
 featId=1:10; samId=1:20
