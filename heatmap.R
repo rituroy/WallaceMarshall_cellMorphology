@@ -1,17 +1,26 @@
+## Set params:
+## sepFClustFlag, getCorFlag, orderFlag, typeList, type2Flag, cohortList, datVerList
 
 ####################################################################
 ####################################################################
-#load("tmp_w3830.RData"); datVer="w3830"
-load("tmp_w5969.RData")
+#load("results/tmp_w3830.RData"); datVer="w3830"
+load("results/tmp_w5969.RData")
 datVer="w906"
 datVerList=c("w906","w5969")
+datVerList=c("w5969")
 datVerList=c("m105")
 datVerList=c("w906")
 for (datVer in datVerList) {
-    if (datVer=="w5969") {load("tmp_w5969.RData"); datVer="w5969"}
+    if (datVer=="w5969") {load("results/tmp_w5969.RData"); datVer="w5969"}
     
     exampleFlag=T
     exampleFlag=F
+    
+    sepFClustFlag=F
+    sepFClustFlag=T ## NOT USED for typeFlag=""
+    
+    getCorFlag=T
+    getCorFlag=F
     
     annRpart=read.table(paste("rpart.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
 
@@ -60,9 +69,6 @@ for (datVer in datVerList) {
     datadir=""
 
     typeFlag="cell"
-
-    sepFClustFlag=F
-    sepFClustFlag=T ## NOT USED for typeFlag=""
     
     type2Flag="_noisyFeat"; typeList=""; centrFlag=""; scaleList=""
     type2Flag="_reducedFeatPC_PC"; typeList=sort(unique(ann$type)); centrFlag=""; scaleList=""
@@ -84,8 +90,8 @@ for (datVer in datVerList) {
     sampleBar="cluster"
 
     distMethod="spearman"
-    distMethod="kendall"
     distMethod="pearson"
+    distMethod="kendall"
     
     classDistFlag="euclidean"
     classDistFlag="kendall"
@@ -120,9 +126,6 @@ for (datVer in datVerList) {
     subsetList=c("_classSet1Set2MissClassRpart")
     subsetList=c("_classSet1","_classSet1Set2")
     subsetList=c("")
-
-    getCorFlag=T
-    getCorFlag=F
     
     orderFlag=rep("",2)
     datadir2=rep("",2)
@@ -168,9 +171,9 @@ for (datVer in datVerList) {
 
     switch(datVer,
         "w5969"={
-            cohortList=c("_mycRas")
             cohortList=c("_wt","_mycRas","_mycRasWt")
             cohortList=c("_wt","_mycRas")
+            cohortList=c("_mycRas")
         },
         "w906"={
             cohortList=c("_wt906")
@@ -180,11 +183,11 @@ for (datVer in datVerList) {
         }
     )
     subsetFList=""
-    type2Flag="_reducedBioFeatPC"; typeList=""
     type2Flag=""; typeList=""
     type2Flag=""; typeList="cell"
     type2Flag=""; typeList=c(sort(unique(ann$type)))
     type2Flag=""; typeList=c("",sort(unique(ann$type)))
+    type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type)))
     distMethod="pearson"
     distMethod="kendall"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
@@ -241,18 +244,37 @@ for (datVer in datVerList) {
                     "_wt906"={
                         cohortName="Wildtype 906"
                         cell=cellW2
-                        ann=annW2
                         annCell=annCellW2
-                        featId1=1:nrow(annW2)
+                        cell_rbf=cell_rbfW2
+                        cell_rbfm=cell_rbfmW2
+                        sdSamPc=sdSamPcW2
+                        sdSamMn=sdSamMnW2
+                        sdFeatPc=sdFeatPcW2
+                        sdFeatMn=sdFeatMnW2
                     },
                     "_mycRas105"={
                         cohortName="Myc/Ras 105"
                         cell=cellM2
-                        ann=annM2
                         annCell=annCellM2
-                        featId1=1:nrow(annM2)
+                        cell_rbf=cell_rbfM2
+                        cell_rbfm=cell_rbfmM2
+                        sdSamPc=sdSamPcM2
+                        sdSamMn=sdSamMnM2
+                        sdFeatPc=sdFeatPcM2
+                        sdFeatMn=sdFeatMnM2
                     }
                 )
+                if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+                    ann=annW
+                    ann_rbf=ann_rbf1
+                    ann_rbfm=ann_rbfm1
+                } else {
+                    ann=annW2
+                    ann_rbf=ann_rbf2
+                    ann_rbfm=ann_rbfm2
+                    featId1=1:nrow(ann)
+                }
+                #featId1=1:nrow(ann)
                 
                 if (exampleFlag) {
                     i=order(apply(cell,2,sd,na.rm=T),decreasing=T)
@@ -338,26 +360,26 @@ for (datVer in datVerList) {
                             "spearman"={classDistMat=classDistMatS},
                             "kendall"={classDistMat=classDistMatK}
                             )
-                            #phen2=data.frame(id=paste("sam",1:nrow(cell),sep=""),sd=sdSam,stringsAsFactors=F)
-                            phen2=data.frame(id=rownames(cell),sd=sdSam,stringsAsFactors=F)
-                            j=match(phen2$id,annCell$id); j1=which(!is.na(j)); j2=j[j1]
+                            #annSam=data.frame(id=paste("sam",1:nrow(cell),sep=""),sd=sdSam,stringsAsFactors=F)
+                            annSam=data.frame(id=rownames(cell),sd=sdSam,stringsAsFactors=F)
+                            j=match(annSam$id,annCell$id); j1=which(!is.na(j)); j2=j[j1]
                             if (length(j1)!=0) {
-                                #phen2$class=""
-                                #phen2$class[j1]=annCell$class[j2]
-                                phen2$set1Class=""
+                                #annSam$class=""
+                                #annSam$class[j1]=annCell$class[j2]
+                                annSam$set1Class=""
                                 j2=which(annCell$set==1)
-                                j=match(phen2$id,annCell$id[j2]); j1=which(!is.na(j)); j2=j2[j[j1]]
-                                #phen2$set1Class[j1]=sub("class","",annCell$class[j2])
-                                phen2$set1Class[j1]=sub("class","",paste("class",annCell$class[j2],sep=""))
-                                phen2$set2Class=""
+                                j=match(annSam$id,annCell$id[j2]); j1=which(!is.na(j)); j2=j2[j[j1]]
+                                #annSam$set1Class[j1]=sub("class","",annCell$class[j2])
+                                annSam$set1Class[j1]=sub("class","",paste("class",annCell$class[j2],sep=""))
+                                annSam$set2Class=""
                                 j2=which(annCell$set==2)
-                                j=match(phen2$id,annCell$id[j2]); j1=which(!is.na(j)); j2=j2[j[j1]]
-                                #phen2$set2Class[j1]=sub("class","",annCell$class[j2])
-                                phen2$set2Class[j1]=sub("class","",paste("class",annCell$class[j2],sep=""))
+                                j=match(annSam$id,annCell$id[j2]); j1=which(!is.na(j)); j2=j2[j[j1]]
+                                #annSam$set2Class[j1]=sub("class","",annCell$class[j2])
+                                annSam$set2Class[j1]=sub("class","",paste("class",annCell$class[j2],sep=""))
                             }
-                            j=match(phen2$id,rownames(classDistMat)); j1=which(!is.na(j)); j2=j[j1]
+                            j=match(annSam$id,rownames(classDistMat)); j1=which(!is.na(j)); j2=j[j1]
                             if (any(!is.na(j))) {
-                                tmp=matrix(nrow=nrow(phen2),ncol=ncol(classDistMat),dimnames=list(phen2$id,paste("dist2",colnames(classDistMat),sep="")))
+                                tmp=matrix(nrow=nrow(annSam),ncol=ncol(classDistMat),dimnames=list(annSam$id,paste("dist2",colnames(classDistMat),sep="")))
                                 tmp[j1,]=classDistMat[j2,]
                                 tmp[j1,]=t(apply(classDistMat[j2,],1,function(x) {
                                     y=order(order(x))
@@ -365,7 +387,7 @@ for (datVer in datVerList) {
                                     y
                                 }))
                                 colnames(tmp)=paste("set1",capWords(colnames(tmp)),sep="")
-                                phen2=cbind(phen2,tmp)
+                                annSam=cbind(annSam,tmp)
                             }
                             
                             varFList="featRatio"
@@ -376,17 +398,17 @@ for (datVer in datVerList) {
                             varList=varName=NULL
                             
                             if (cohort=="_mycRasWt") {
-                                #phen2=cbind(phen2,cohort=c(rep("Myc/Ras",nrow(cellM)),rep("Wildtype",nrow(cellW))))
-                                phen2$cohort="Myc/Ras"
-                                phen2$cohort[substr(phen2$id,1,1)=="w"]="Wildtype"
+                                #annSam=cbind(annSam,cohort=c(rep("Myc/Ras",nrow(cellM)),rep("Wildtype",nrow(cellW))))
+                                annSam$cohort="Myc/Ras"
+                                annSam$cohort[substr(annSam$id,1,1)=="w"]="Wildtype"
                                 #varList=c(varList,"cohort","set1Class")
                                 #varName=c(varName,paste(c("cohort","set1Class")," ",sep=""))
                                 varList=c(varList,"cohort")
                                 varName=c(varName,paste(c("cohort")," ",sep=""))
                             } else if (cohort=="_wt") {
-                                phen2$set1ClassPred=""
-                                j=match(phen2$id,colnames(classPredMat)); j1=which(!is.na(j)); j2=j[j1]
-                                phen2$set1ClassPred[j1]=sub("class","",classPredMat[paste(cohort,ifelse(typeFlag=="","",paste("_",typeFlag,sep="")),sep=""),j2])
+                                annSam$set1ClassPred=""
+                                j=match(annSam$id,colnames(classPredMat)); j1=which(!is.na(j)); j2=j[j1]
+                                annSam$set1ClassPred[j1]=sub("class","",classPredMat[paste(cohort,ifelse(typeFlag=="","",paste("_",typeFlag,sep="")),sep=""),j2])
                                 #varList=c(varList,"set1Class","set1ClassPred")
                                 #varName=c(varName,paste(c("set1Class","set1ClassPred")," ",sep=""))
                                 if (subsetFlag=="_classSet1Set2") {
@@ -395,13 +417,13 @@ for (datVer in datVerList) {
                                 }
                             }
                             if (F) {
-                            j=grep("Dist2class",names(phen2))
-                            if (length(j)!=0) {
-                                #nm=names(phen2)[grep("dist2class",names(phen2))]
-                                nm=names(phen2)[j]
-                                varList=c(varList,nm)
-                                varName=c(varName,nm)
-                            }
+                                j=grep("Dist2class",names(annSam))
+                                if (length(j)!=0) {
+                                    #nm=names(annSam)[grep("dist2class",names(annSam))]
+                                    nm=names(annSam)[j]
+                                    varList=c(varList,nm)
+                                    varName=c(varName,nm)
+                                }
                             }
                             
                             if (type2Flag%in%c("_reducedFeatPC_PC","_reducedFeatPC","_reducedFeatMean","_noisyFeat")) {
@@ -619,7 +641,7 @@ for (datVer in datVerList) {
                             annFeat$featRatio[i2][which(ann$complex[i1]==0)]=NA
                             annFeat$featRatio[is.na(i)]=NA
                             
-                            phenAll=phen2
+                            phenAll=annSam
                             
                             if (subsetFFlag!="") {
                                 k=sub("ClustOrd","",orderSam)
@@ -664,24 +686,24 @@ for (datVer in datVerList) {
                             if (length(grep("_class",subsetFlag))==1) {
                                 #header=paste(header,", no zernike2...",sep="")
                                 i=1:nrow(annFeat)
-                                j=1:nrow(phen2)
+                                j=1:nrow(annSam)
                                 if (subsetFlag=="_classSet1") {
-                                    j=which(phen2$set1Class!="")
+                                    j=which(annSam$set1Class!="")
                                 } else if (subsetFlag=="_classSet1Set2") {
-                                    j=which(phen2$set1Class!="" | phen2$set2Class!="")
+                                    j=which(annSam$set1Class!="" | annSam$set2Class!="")
                                 } else if (subsetFlag=="_classSet1MissClass") {
-                                    j=which(phen2$set1Class!=phen2$set1ClassPred)
+                                    j=which(annSam$set1Class!=annSam$set1ClassPred)
                                 } else if (subsetFlag=="_classSet1MissClassRpart") {
                                     i=match(annFeat$feature,annRpart$feature[which(annRpart$type==typeFlag)]); i=which(!is.na(i))
-                                    j=which(phen2$set1Class!=phen2$set1ClassPred)
+                                    j=which(annSam$set1Class!=annSam$set1ClassPred)
                                     nClust[1]=NA
                                 } else if (subsetFlag=="_classSet1Set2MissClassRpart") {
                                     i=match(annFeat$feature,annRpart$feature[which(annRpart$type==typeFlag)]); i=which(!is.na(i))
-                                    j=which((phen2$set1Class!="" & phen2$set1Class!=phen2$set1ClassPred) | (phen2$set2Class!="" & phen2$set2Class!=phen2$set1ClassPred))
+                                    j=which((annSam$set1Class!="" & annSam$set1Class!=annSam$set1ClassPred) | (annSam$set2Class!="" & annSam$set2Class!=annSam$set1ClassPred))
                                     nClust[1]=NA
                                 }
                                 arrayData=arrayData[i,j]
-                                phen2=phen2[j,]
+                                annSam=annSam[j,]
                                 annFeat=annFeat[i,]
                             }
                             annFeatAll=annFeat
@@ -768,11 +790,11 @@ for (datVer in datVerList) {
                                             write.table(tbl2,paste("clusterInfoSample",fNameOut4,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                                         }
                                     }
-                                    phen2$clust=tbl$clustId
-                                    phen2=phen2[j,]
+                                    annSam$clust=tbl$clustId
+                                    annSam=annSam[j,]
                                     arrayData=arrayData[,j]
                                     nm=paste("clust",gsub("_kmeans|ClustOrd","",orderFlag[2]),sep="")
-                                    names(phen2)[match("clust",names(phen2))]=nm
+                                    names(annSam)[match("clust",names(annSam))]=nm
                                     varList=c(varList,nm)
                                     varName=c(varName,paste(c("clust")," ",sep=""))
                                     
@@ -780,7 +802,7 @@ for (datVer in datVerList) {
                                 clustC=NA
                                 nClust[2]=NA
                             }
-                            #phenAll=phen2
+                            #phenAll=annSam
                             arrayDataAll=arrayData
                             clustCAll=clustC
                             nClustAll=nClust
@@ -834,6 +856,9 @@ for (datVer in datVerList) {
                                 if (typeFlag=="") i=1:nrow(annFeatAll) else i=which(annFeatAll$type==type3Flag)
                                 arrayData=arrayData2=arrayDataAll[i,]
                                 annFeat=annFeatAll[i,]
+                                nClust=nClustAll
+                                if (!is.na(nClust[1]) & nClust[1]>=nrow(annFeat)) nClust[1]=NA
+                                if (!is.na(nClust[2]) & nClust[2]>=nrow(annSam)) nClust[2]=NA
                                 #if (!sepFClustFlag & type2Flag%in%c("_reducedBioFeatPC","_reducedBioFeatMean")) {
                                 if (!sepFClustFlag & typeFlag!="" & type2Flag%in%c("","_reducedBioFeatPC","_reducedBioFeatMean")) {
                                     arrayData=arrayDataAll
@@ -1008,11 +1033,11 @@ for (datVer in datVerList) {
                                 if (!is.null(varList) & (!sepFClustFlag | (sepFClustFlag & type3Flag==typeFlag & cohort=="_mycRasWt"))) {
                                     #if (!sepFClustFlag | (sepFClustFlag & type3Flag==typeFlag)) {
                                     #if (!sepFClustFlag) {
-                                    colCol=matrix(nrow=length(varList),ncol=nrow(phen2))
+                                    colCol=matrix(nrow=length(varList),ncol=nrow(annSam))
                                     for (varId in 1:length(varList)) {
                                         if (varList[varId]%in%c("sd")) {
                                             #if (varList[varId]%in%c("sd")) {
-                                            j=match(phen2$id,phenAll$id)
+                                            j=match(annSam$id,phenAll$id)
                                             x=round(100*phenAll[,varList[varId]])+1
                                             lim=range(x,na.rm=T)
                                             if (varList[varId]==c("sd")) lim=limSdSam
@@ -1023,7 +1048,7 @@ for (datVer in datVerList) {
                                             colCol[varId,]=colColUniq[x[j]]
                                         } else if (length(grep("dist2class",varList[varId]))==1) {
                                             #if (varList[varId]%in%c("sd")) {
-                                            j=match(phen2$id,phenAll$id)
+                                            j=match(annSam$id,phenAll$id)
                                             x=round(phenAll[,varList[varId]])
                                             lim=range(x,na.rm=T)
                                             #if (length(grep("dist2class",varList[varId]))==1) lim=limDist2classSam
@@ -1034,7 +1059,7 @@ for (datVer in datVerList) {
                                             x=as.character(phenAll[,varList[varId]])
                                             x[x==""]=NA; x=as.integer(as.factor(x))
                                             grpUniq=sort(unique(x))
-                                            x=x[match(phen2$id,phenAll$id)]
+                                            x=x[match(annSam$id,phenAll$id)]
                                             if (substr(varList[varId],1,5)%in%c("clust") | length(grep("Class",varList[varId]))==1) {
                                                 colCol[varId,]=colList[x]
                                             } else {
@@ -1088,7 +1113,8 @@ for (datVer in datVerList) {
                                 
                                 ## -------------------
                                 if (is.na(nClust[1])) {
-                                    tbl=cbind(annFeat,clustId="cluster1",order=1:nrow(annFeat))
+                                    if (class(clustR)=="hclust") i=clustR$order else i=1:nrow(annFeat)
+                                    tbl=cbind(annFeat[i,],clustId="cluster1",order=1:nrow(annFeat))
                                 } else {
                                     if (F) {
                                         pdf(paste(subDir,"clusterFeatures",fNameOut2,".pdf",sep=""))
@@ -1106,7 +1132,8 @@ for (datVer in datVerList) {
                                 write.table(tbl, paste(subDir,"clusterInfoFeature",fNameOut2,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                                 
                                 if (is.na(nClust[2])) {
-                                    tbl=cbind(phen2,clustId="cluster1",order=1:nrow(phen2))
+                                    if (class(clustC)=="hclust") j=clustR$order else j=1:nrow(annSam)
+                                    tbl=cbind(annSam[j,],clustId="cluster1",order=1:nrow(annSam))
                                 } else {
                                     if (F) {
                                         pdf(paste(subDir,"clusterSamples",fNameOut,".pdf",sep=""))
@@ -1120,7 +1147,7 @@ for (datVer in datVerList) {
                                         clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
                                     }
                                     
-                                    tbl=cbind(phen2[clustC$order,],clustId,order=1:nrow(phen2))
+                                    tbl=cbind(annSam[clustC$order,],clustId,order=1:nrow(annSam))
                                     out=matrix(nrow=nrow(tbl),ncol=9)
                                     colnames(out)=paste("clustId_",2:10,sep="")
                                     for (kk in 1:ncol(out)) {

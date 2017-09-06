@@ -1,3 +1,5 @@
+## Run sections 1 and 2
+
 computerFlag="cluster"
 computerFlag=""
 
@@ -18,6 +20,9 @@ capWords=function(s, strict=FALSE) {
     sapply(strsplit(s, split=" "), cap, USE.NAMES=!is.null(names(s)))
 }
 
+####################################################################
+####################################################################
+## Section 1
 ## ----------------------------------------------
 datadir="docs/"
 cellW2=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
@@ -79,6 +84,16 @@ annCellM2$junk=0
 cellM2=as.matrix(cellM2)
 
 ## -------------------
+load("results/tmp_w5969.RData")
+annW=ann
+ann_rbf1=ann_rbf
+ann_rbfm1=ann_rbfm
+
+####################################################################
+####################################################################
+## -------------------
+## Generate tmp_w5969.RData
+
 datadir="docs/"
 cellW=read.table(paste(datadir,"WT_Plate1WellA1-K16_MeasurementsNUMBERSONLY.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
 
@@ -280,29 +295,33 @@ switch(cohort,
     "_mycRas"={
         cohortName="Myc/Ras"
         cell=cellM
-        ann=annW
     },
     "_wt"={
         cohortName="Wildtype"
         cell=cellW
-        ann=annW
     },
     "_mycRasWt"={
         cohortName="Myc/Ras & Wildtype"
         cell=cellMW
-        ann=annW
     },
     "_wt906"={
         cohortName="Wildtype 906"
         cell=cellW2
-        ann=annW2
     },
     "_mycRas105"={
         cohortName="Myc/Ras 105"
         cell=cellM2
-        ann=annM2
     }
 )
+if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+    ann=annW
+    ann_rbf=ann_rbf1
+    ann_rbfm=ann_rbfm1
+} else {
+    ann=annW2
+    ann_rbf=ann_rbf2
+    ann_rbfm=ann_rbfm2
+}
 #cell=cell[1:10,]
 
 if (F) {
@@ -351,8 +370,8 @@ if (F) {
 		for (k2 in (k1+1):nrow(corMat)) {
 			corInfo$feature1[k]=rownames(corMat)[k1]
 			corInfo$feature2[k]=rownames(corMat)[k2]
-            corInfo$featUniq1[k]=ann$featUniq[match(rownames(corMat)[k1],annW2$feature)]
-            corInfo$featUniq2[k]=ann$featUniq[match(rownames(corMat)[k2],annW2$feature)]
+            corInfo$featUniq1[k]=ann$featUniq[match(rownames(corMat)[k1],ann$feature)]
+            corInfo$featUniq2[k]=ann$featUniq[match(rownames(corMat)[k2],ann$feature)]
             corInfo$corKend[k]=corMat[k1,k2]
 			k=k+1
 		}
@@ -824,33 +843,58 @@ Optimum k:  2
 Optimum k:  2
 "
 
+####################################################################
+####################################################################
+## Section 2
 ## -------------------
-## Separate out the feature clusters with good profiles from those with bad profiles
-## Use 15 clusters
+## Reduce features by PCA
+## kindFlag="biology" - based on biology
+## kindFlag="cluster" - based on clustering
+##     Separate out the feature clusters with good profiles from those with bad profiles
+##     Use 15 clusters
 
 cohort="_mycRas"
 cohort="_wt"
+cohort="_mycRasWt"
 
-for (cohort in c("_mycRas","_wt","_mycRasWt")) {
+for (cohort in c("_wt906","_mycRas105")) {
+    #for (cohort in c("_mycRas","_wt","_mycRasWt","_wt906","_mycRas105")) {
     kindFlag="cluster"
     kindFlag="biology"
 
     switch(cohort,
-           "_mycRas"={
-               cohortName="Myc/Ras"
-               cell=cellM
-           },
-           "_wt"={
-               cohortName="Wildtype"
-               cell=cellW
-           },
-           "_mycRasWt"={
-               cohortName="Myc/Ras & Wildtype"
-               cell=rbind(cellM,cellW)
-               #rownames(cell)=c(paste("m",rownames(cellM),sep=""),paste("w",rownames(cellW),sep=""))
-           }
-           )
-
+        "_mycRas"={
+           cohortName="Myc/Ras"
+           cell=cellM
+        },
+        "_wt"={
+           cohortName="Wildtype"
+           cell=cellW
+        },
+        "_mycRasWt"={
+           cohortName="Myc/Ras & Wildtype"
+           cell=rbind(cellM,cellW)
+           #rownames(cell)=c(paste("m",rownames(cellM),sep=""),paste("w",rownames(cellW),sep=""))
+        },
+        "_wt906"={
+           cohortName="Wildtype 906"
+           cell=cellW2
+        },
+        "_mycRas105"={
+           cohortName="Myc/Ras 105"
+           cell=cellM2
+        }
+    )
+    if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+        ann=annW
+        #ann_rbf=ann_rbf1
+        #ann_rbfm=ann_rbfm1
+    } else {
+        ann=annW2
+        #ann_rbf=ann_rbf2
+        #ann_rbfm=ann_rbfm2
+    }
+    
     if (kindFlag=="cluster") {
         good=list(c(1,6,8,9,11),c(1,2,3,4,5,6,8,9,10,14,15),c(1,2,3,10,14,15),c(1,4,5,6,7,8,9,10,11,14),c(1,2,3,6,8,13))
         names(good)=c("cell","mitochondria","nucleus","cell_zernike1Only","nucleus_zernike1Only")
@@ -872,11 +916,11 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
     arrayData1=arrayData
 
     arrayData=cell
-    centr=apply(arrayData,1,median,na.rm=T)
+    centr=apply(arrayData,2,median,na.rm=T)
     for (i in 1:ncol(arrayData)) {
         arrayData[,i]=arrayData[,i]-centr[i]
     }
-    scal=apply(arrayData,1,sd,na.rm=T)
+    scal=apply(arrayData,2,sd,na.rm=T)
     for (i in 1:ncol(arrayData)) {
         arrayData[,i]=arrayData[,i]/scal[i]
     }
@@ -899,7 +943,7 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
         cat("\n\n===============",grpUniq[gId],"===========\n")
         typeThis=sub("_zernike1Only","",grpUniq[gId])
         if (kindFlag=="cluster") {
-        #	clustInfo=read.table(paste(datadir,fileList[gId],sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+            #clustInfo=read.table(paste(datadir,fileList[gId],sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
             clustInfo=read.table(paste(datadir,"clusterInfoFeature",cohort,"_",grpUniq[gId],"_kendall.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
             clustInfo$good=0
             k=which(clustInfo$clustId%in%paste("cluster",good[[grpUniq[gId]]],sep=""))
@@ -907,8 +951,13 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
         } else {
             clustInfo=ann[which(ann$type==grpUniq[gId]),]
             clustInfo$clustId=clustInfo$featUniq
-            clustInfo$good=0
-            clustInfo$good[which(clustInfo$clustId%in%clustInfo$clustId[duplicated(clustInfo$clustId)])]=1
+            if (cohort%in%c("_wt906","_mycRas105")) {
+                clustInfo$good=1
+            } else {
+                clustInfo$good=0
+                ## CHECK !!! Not sure why unique features with no replicates are excluded
+                clustInfo$good[which(clustInfo$clustId%in%clustInfo$clustId[duplicated(clustInfo$clustId)])]=1
+            }
         }
         
         clustUniq=unique(clustInfo$clustId[which(clustInfo$good==1)])
@@ -916,17 +965,25 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
         for (cId in 1:length(clustUniq)) {
             cat("\n\n---------------",clustUniq[cId],"\n")
             j=which(colnames(arrayData)%in%clustInfo$feature[which(clustInfo$clustId==clustUniq[cId])])
+            #if (length(j)==0) {
+            #    cellMetaMean[,clustUniq[cId]]=cellMeta[,clustUniq[cId]]=NA
+            #} else if (length(j)==1) {
+            if (length(j)==1) {
+                cellMetaMean[,clustUniq[cId]]=cellMeta[,clustUniq[cId]]=arrayData2[,j]
+            } else {
+                j=j[apply(arrayData2_1[,j],2,function(x) mean(!is.na(x)))]
+                cellMetaMean[,clustUniq[cId]]=apply(arrayData2[,j],1,mean,na.rm=T)
+                #fit=prcomp(arrayData[,j], center=T, scale=T)
+                fit=prcomp(arrayData2_1[,j], center=F, scale=F)
+                cellMeta[,clustUniq[cId]]=fit$x[,1]
+                png(paste("plot_meanVpca1_cellMeta","_",clustUniq[cId],cohort,"_",grpUniq[gId],".png",sep=""))
+                plot(apply(arrayData2_1[,j],1,mean,na.rm=T),fit$x[,1],main=paste(grpUniq[gId],": ",clustUniq[cId],sep=""),xlab="mean",ylab="pca1")
+                dev.off()
+                png(paste("screeplot_cellMeta","_",clustUniq[cId],cohort,"_",grpUniq[gId],".png",sep=""))
+                plot(fit,main=paste(grpUniq[gId],": ",clustUniq[cId],sep=""))
+                dev.off()
+            }
             print(ann$feature[j])
-            cellMetaMean[,clustUniq[cId]]=apply(arrayData2[,j],1,mean,na.rm=T)
-    #		fit=prcomp(arrayData[,j], center=T, scale=T)
-            fit=prcomp(arrayData2_1[,j], center=F, scale=F)
-            cellMeta[,clustUniq[cId]]=fit$x[,1]
-            png(paste("plot_meanVpca1_cellMeta","_",clustUniq[cId],cohort,"_",grpUniq[gId],".png",sep=""))
-            plot(apply(arrayData2_1[,j],1,mean,na.rm=T),fit$x[,1],main=paste(grpUniq[gId],": ",clustUniq[cId],sep=""),xlab="mean",ylab="pca1")
-            dev.off()
-            png(paste("screeplot_cellMeta","_",clustUniq[cId],cohort,"_",grpUniq[gId],".png",sep=""))
-            plot(fit,main=paste(grpUniq[gId],": ",clustUniq[cId],sep=""))
-            dev.off()
         }
         
         colId=c("feature","type")
@@ -945,10 +1002,10 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
             write.table(tbl, paste("cell_zernike1Only_reducedFeatByMean",cohort,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
         } else {
             if (kindFlag=="cluster") {
-            #	cell_rf=cbind(cell_rf,cell[,j],cellMeta)
+                #cell_rf=cbind(cell_rf,cell[,j],cellMeta)
                 cell_rf=cbind(cell_rf,arrayData2_1[,j],cellMeta)
                 ann_rf=rbind(ann_rf,ann[j,colId],data.frame(feature=colnames(cellMeta),type=typeThis,stringsAsFactors=F))
-            #	cell_rfm=cbind(cell_rfm,arrayData2[,j],cellMetaMean)
+                #cell_rfm=cbind(cell_rfm,arrayData2[,j],cellMetaMean)
                 cell_rfm=cbind(cell_rfm,arrayData2_1[,j],cellMetaMean)
                 ann_rfm=rbind(ann_rfm,ann[j,colId],data.frame(feature=colnames(cellMetaMean),type=typeThis,stringsAsFactors=F))
                 
@@ -986,6 +1043,13 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
     quarFeatPc=t(apply(cell_rbf[,which(substr(colnames(cell_rbf),1,nchar("cluster"))!="cluster")],2,quantile,probs=c(.25,.75),na.rm=T))
     quarFeatMn=t(apply(cell_rbfm[,which(substr(colnames(cell_rbfm),1,nchar("cluster"))!="cluster")],2,quantile,probs=c(.25,.75),na.rm=T))
 
+    if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+        ann_rbf1=ann_rbf
+        ann_rbfm1=ann_rbfm
+    } else {
+        ann_rbf2=ann_rbf
+        ann_rbfm2=ann_rbfm
+    }
     switch(cohort,
         "_mycRas"={
            sdSamPcM=sdSamPc
@@ -1008,8 +1072,8 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
             meanFeatMnW=meanFeatMn
             quarFeatPcW=quarFeatPc
             quarFeatMnW=quarFeatMn
-           cell_rbfW=cell_rbf
-           cell_rbfmW=cell_rbfm
+            cell_rbfW=cell_rbf
+            cell_rbfmW=cell_rbfm
         },
         "_mycRasWt"={
             sdSamPcMW=sdSamPc
@@ -1022,11 +1086,38 @@ for (cohort in c("_mycRas","_wt","_mycRasWt")) {
             quarFeatMnMW=quarFeatMn
             cell_rbfMW=cell_rbf
             cell_rbfmMW=cell_rbfm
+        },
+        "_wt906"={
+            sdSamPcW2=sdSamPc
+            sdSamMnW2=sdSamMn
+            sdFeatPcW2=sdFeatPc
+            sdFeatMnW2=sdFeatMn
+            meanFeatPcW2=meanFeatPc
+            meanFeatMnW2=meanFeatMn
+            quarFeatPcW2=quarFeatPc
+            quarFeatMnW2=quarFeatMn
+            cell_rbfW2=cell_rbf
+            cell_rbfmW2=cell_rbfm
+        },
+        "_mycRas105"={
+            sdSamPcM2=sdSamPc
+            sdSamMnM2=sdSamMn
+            sdFeatPcM2=sdFeatPc
+            sdFeatMnM2=sdFeatMn
+            meanFeatPcM2=meanFeatPc
+            meanFeatMnM2=meanFeatMn
+            quarFeatPcM2=quarFeatPc
+            quarFeatMnM2=quarFeatMn
+            cell_rbfM2=cell_rbf
+            cell_rbfmM2=cell_rbfm
         }
     )
 }
 
 save.image("tmp.RData")
+
+####################################################################
+####################################################################
 
 for (thisFlag in c("_pc","_mean")) {
     switch(thisFlag,
@@ -1140,15 +1231,22 @@ nClustList=2:10
 switch(cohort,
     "_wt906"={
         cell=cellW2
-        ann=annW2
         annCell=annCellW2
     },
     "_mycRas105"={
         cell=cellM2
-        ann=annM2
         annCell=annCellM2
     }
 )
+if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+    ann=annW
+    ann_rbf=ann_rbf1
+    ann_rbfm=ann_rbfm1
+} else {
+    ann=annW2
+    ann_rbf=ann_rbf2
+    ann_rbfm=ann_rbfm2
+}
 
 out=matrix(nrow=nrow(annCell),ncol=length(nClustList)*length(typeList),dimnames=list(annCell$id,paste("clustId_",nClustList,"_",rep(typeList,each=length(nClustList)),sep="")))
 for (typeFlag in typeList) {
@@ -1188,11 +1286,14 @@ write.table(tbl, paste("pvalFeature_forClusterSample",cohort,typeflag,"_reducedB
 cohort="_mycRas"
 cohort="_wt"
 
+cohort="_wt906"
+cohort="_mycRas105"
+
 featureFlag=""
 featureFlag="_reducedFeatMean"
 featureFlag="_reducedFeatPCA"
-featureFlag="_reducedBioFeatPCA"
 featureFlag="_reducedBioFeatMean"
+featureFlag="_reducedBioFeatPCA"
 
 subsetList=c("","_zernike1Only")
 subsetList=c("")
@@ -1200,146 +1301,171 @@ subsetList=c("")
 plotCutoffFlag=T
 plotCutoffFlag=F
 
-cohortName=ifelse(cohort=="_mycRas","Myc/Ras","Wildtype")
-switch(cohort,
-	   "_mycRas"={
-	   cell=cellM
-	   },
-	   "_wt"={
-	   cell=cellW
-	   }
-	   )
+for (cohort in c("_wt906","_mycRas105")) {
+    #cohortName=ifelse(cohort=="_mycRas","Myc/Ras","Wildtype")
+    switch(cohort,
+        "_mycRas"={
+           cohortName="Myc/Ras"
+           cell=cellM
+        },
+        "_wt"={
+           cohortName="Wildtype"
+           cell=cellW
+        },
+        "_mycRasWt"={
+            cohortName="Myc/Ras & Wildtype"
+            cell=cellMW
+        },
+        "_wt906"={
+            cohortName="Wildtype 906"
+            cell=cellW2
+        },
+        "_mycRas105"={
+            cohortName="Myc/Ras 105"
+            cell=cellM2
+        }
+    )
+    if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+        ann=annW
+        ann_rbf=ann_rbf1
+        ann_rbfm=ann_rbfm1
+    } else {
+        ann=annW2
+        ann_rbf=ann_rbf2
+        ann_rbfm=ann_rbfm2
+    }
 
-for (typeFlag in sort(unique(ann$type))) {
-	for (subsetFlag in subsetList) {
-		fNameOut=paste(cohort,"_",typeFlag,subsetFlag,featureFlag,sep="")
-		header=paste(cohortName,": ",typeFlag,sep="")
-		cat("\n\n===========",header,"\n")
+    for (typeFlag in sort(unique(ann$type))) {
+        for (subsetFlag in subsetList) {
+            fNameOut=paste(cohort,"_",typeFlag,subsetFlag,featureFlag,sep="")
+            header=paste(cohortName,": ",typeFlag,sep="")
+            cat("\n\n===========",header,"\n")
 
-		if (featureFlag=="_reducedFeatPCA") {
-			featId=which(ann_rf$type==typeFlag)			
-			arrayData=cell_rf[,featId]
-			annFeat=ann_rf[featId,]
-		} else if (featureFlag=="_reducedFeatMean") {
-			featId=which(ann_rfm$type==typeFlag)
-			arrayData=cell_rfm[,featId]
-			annFeat=ann_rfm[featId,]
-		} else if (featureFlag=="_reducedBioFeatPCA") {
-			featId=which(ann_rbf$type==typeFlag)			
-			arrayData=cell_rbf[,featId]
-			annFeat=ann_rbf[featId,]			
-		} else if (featureFlag=="_reducedBioFeatMean") {
-			featId=which(ann_rbfm$type==typeFlag)			
-			arrayData=cell_rbfm[,featId]
-			annFeat=ann_rbfm[featId,]						
-		} else {
-			featId=featId1[ann$type[featId1]==typeFlag]		
-			arrayData=cell[,featId]
-			annFeat=ann[featId,]
-			corMat2=corMat[featId,featId]
-			corMatSam2=corMatSam
-		}
+            if (featureFlag=="_reducedFeatPCA") {
+                featId=which(ann_rf$type==typeFlag)			
+                arrayData=cell_rf[,featId]
+                annFeat=ann_rf[featId,]
+            } else if (featureFlag=="_reducedFeatMean") {
+                featId=which(ann_rfm$type==typeFlag)
+                arrayData=cell_rfm[,featId]
+                annFeat=ann_rfm[featId,]
+            } else if (featureFlag=="_reducedBioFeatPCA") {
+                featId=which(ann_rbf$type==typeFlag)			
+                arrayData=cell_rbf[,featId]
+                annFeat=ann_rbf[featId,]			
+            } else if (featureFlag=="_reducedBioFeatMean") {
+                featId=which(ann_rbfm$type==typeFlag)			
+                arrayData=cell_rbfm[,featId]
+                annFeat=ann_rbfm[featId,]						
+            } else {
+                featId=featId1[ann$type[featId1]==typeFlag]		
+                arrayData=cell[,featId]
+                annFeat=ann[featId,]
+                corMat2=corMat[featId,featId]
+                corMatSam2=corMatSam
+            }
 
-		if (subsetFlag=="_zernike1Only") {
-			break
-			
-			i=grep("Zernike",annFeat$feature)
-			i=i[which(!annFeat$feature[i]%in%c("CellZernike1","NucZernike1"))]
-			if (length(i)==0) next
-			arrayData=arrayData[,-i]
-			annFeat=annFeat[-i,]
-			corMat2=corMat2[-i,-i]
-			header=paste(header,", no zernike2...",sep="")
-		}
+            if (subsetFlag=="_zernike1Only") {
+                break
+                
+                i=grep("Zernike",annFeat$feature)
+                i=i[which(!annFeat$feature[i]%in%c("CellZernike1","NucZernike1"))]
+                if (length(i)==0) next
+                arrayData=arrayData[,-i]
+                annFeat=annFeat[-i,]
+                corMat2=corMat2[-i,-i]
+                header=paste(header,", no zernike2...",sep="")
+            }
 
-		rownames(arrayData)=paste("sam",1:nrow(arrayData),sep="")
-		
-		for (j in 1:ncol(arrayData)) {
-			meanThis=mean(arrayData[,j],na.rm=T)
-			arrayData[is.na(arrayData[,j]),j]=meanThis
-		}
+            rownames(arrayData)=paste("sam",1:nrow(arrayData),sep="")
+            
+            for (j in 1:ncol(arrayData)) {
+                meanThis=mean(arrayData[,j],na.rm=T)
+                arrayData[is.na(arrayData[,j]),j]=meanThis
+            }
 
-		fit=prcomp(arrayData, center=T, scale=T)
-		print("length(fit$sdev)")
-		print(length(fit$sdev))
-		print("(1:length(fit$sdev))[order(c(diff(fit$sdev),999))]")
-		print((1:length(fit$sdev))[order(c(diff(fit$sdev),999))])
-		
-		cutoff=3
-		
-		if (featureFlag=="_reducedFeatPCA") {
-			switch(typeFlag,
-				   "cell"={
-				   fit1=fit
-				   cutoff=12
-				   },
-				   "mitochondria"={
-				   fit2=fit
-				   cutoff=16
-				   },
-				   "nucleus"={
-				   fit3=fit
-				   cutoff=16
-				   }
-				   )
-		}
-		
-		if (featureFlag=="_reducedFeatMean") {
-            ## CHECK THIS !!!
-			switch(typeFlag,
-				   "cell"={
-				   fit1=fit
-				   cutoff=18
-				   },
-				   "mitochondria"={
-				   fit2=fit
-				   cutoff=9
-				   },
-				   "nucleus"={
-				   fit3=fit
-				   cutoff=18
-				   }
-				   )
-		}
-		#fit$rotation[,"PC1"]
-		
-		png(paste("screePlot_pca",fNameOut,".png",sep=""))
-		screeplot(fit,npcs=length(fit$sdev),main=paste("PCA screeplot: ",header,sep=""))
-		if (plotCutoffFlag) abline(v=cutoff+1,col="red",lty="dotted")
-		dev.off()
-		
-		if (F) {
-		for (k in c(10,20,30)) {
-			png(paste("screePlot_pca_",k,"comp",fNameOut,".png",sep=""))
-			screeplot(fit,npcs=k,main=paste("PCA screeplot (",k," comp): ",header,sep=""))
-			dev.off()
-		}
-		}
-		
-		png(paste("biPlot_pca",fNameOut,"_%1d.png",sep=""))
-        #par(mfcol=c(2,2))
-		biplot(fit,choices=c(1,2),main=paste("PCA biplot: ",header,sep=""))
-		biplot(fit,choices=c(1,3),main=paste("PCA biplot: ",header,sep=""))
-		biplot(fit,choices=c(2,3),main=paste("PCA biplot: ",header,sep=""))
-		dev.off()
-		
-		png(paste("rotationPlot_pca",fNameOut,".png",sep=""))
-		par(mfcol=c(2,2))
-		plot(fit$rotation[,"PC1"],fit$rotation[,"PC2"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC1",ylab="Rotation: PC2")
-		plot(fit$rotation[,"PC1"],fit$rotation[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC1",ylab="Rotation: PC3")
-		plot(fit$rotation[,"PC2"],fit$rotation[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC2",ylab="Rotation: PC3")
-		dev.off()
-		
-		png(paste("scorePlot_pca",fNameOut,".png",sep=""))
-		par(mfcol=c(2,2))
-		plot(fit$x[,"PC1"],fit$x[,"PC2"],main=paste("PCA: ",header,sep=""),xlab="Score: PC1",ylab="Score: PC2")
-		plot(fit$x[,"PC1"],fit$x[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Score: PC1",ylab="Score: PC3")
-		plot(fit$x[,"PC2"],fit$x[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Score: PC2",ylab="Score: PC3")
-		dev.off()
-		
-		tbl=cbind(feature=rownames(fit$x),fit$x[,1:cutoff])
-		write.table(tbl, paste("prinComp",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
-	}
+            fit=prcomp(arrayData, center=T, scale=T)
+            print("length(fit$sdev)")
+            print(length(fit$sdev))
+            print("(1:length(fit$sdev))[order(c(diff(fit$sdev),999))]")
+            print((1:length(fit$sdev))[order(c(diff(fit$sdev),999))])
+            
+            cutoff=3
+            
+            if (featureFlag=="_reducedFeatPCA") {
+                switch(typeFlag,
+                       "cell"={
+                       fit1=fit
+                       cutoff=12
+                       },
+                       "mitochondria"={
+                       fit2=fit
+                       cutoff=16
+                       },
+                       "nucleus"={
+                       fit3=fit
+                       cutoff=16
+                       }
+                       )
+            }
+            
+            if (featureFlag=="_reducedFeatMean") {
+                ## CHECK THIS !!!
+                switch(typeFlag,
+                       "cell"={
+                       fit1=fit
+                       cutoff=18
+                       },
+                       "mitochondria"={
+                       fit2=fit
+                       cutoff=9
+                       },
+                       "nucleus"={
+                       fit3=fit
+                       cutoff=18
+                       }
+                       )
+            }
+            #fit$rotation[,"PC1"]
+            
+            png(paste("screePlot_pca",fNameOut,".png",sep=""))
+            screeplot(fit,npcs=length(fit$sdev),main=paste("PCA screeplot: ",header,sep=""))
+            if (plotCutoffFlag) abline(v=cutoff+1,col="red",lty="dotted")
+            dev.off()
+            
+            if (F) {
+            for (k in c(10,20,30)) {
+                png(paste("screePlot_pca_",k,"comp",fNameOut,".png",sep=""))
+                screeplot(fit,npcs=k,main=paste("PCA screeplot (",k," comp): ",header,sep=""))
+                dev.off()
+            }
+            }
+            
+            png(paste("biPlot_pca",fNameOut,"_%1d.png",sep=""))
+            #par(mfcol=c(2,2))
+            biplot(fit,choices=c(1,2),main=paste("PCA biplot: ",header,sep=""))
+            biplot(fit,choices=c(1,3),main=paste("PCA biplot: ",header,sep=""))
+            biplot(fit,choices=c(2,3),main=paste("PCA biplot: ",header,sep=""))
+            dev.off()
+            
+            png(paste("rotationPlot_pca",fNameOut,".png",sep=""))
+            par(mfcol=c(2,2))
+            plot(fit$rotation[,"PC1"],fit$rotation[,"PC2"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC1",ylab="Rotation: PC2")
+            plot(fit$rotation[,"PC1"],fit$rotation[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC1",ylab="Rotation: PC3")
+            plot(fit$rotation[,"PC2"],fit$rotation[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Rotation: PC2",ylab="Rotation: PC3")
+            dev.off()
+            
+            png(paste("scorePlot_pca",fNameOut,".png",sep=""))
+            par(mfcol=c(2,2))
+            plot(fit$x[,"PC1"],fit$x[,"PC2"],main=paste("PCA: ",header,sep=""),xlab="Score: PC1",ylab="Score: PC2")
+            plot(fit$x[,"PC1"],fit$x[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Score: PC1",ylab="Score: PC3")
+            plot(fit$x[,"PC2"],fit$x[,"PC3"],main=paste("PCA: ",header,sep=""),xlab="Score: PC2",ylab="Score: PC3")
+            dev.off()
+            
+            tbl=cbind(feature=rownames(fit$x),fit$x[,1:cutoff])
+            write.table(tbl, paste("prinComp",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
+        }
+    }
 }
 
 ## -------------------
