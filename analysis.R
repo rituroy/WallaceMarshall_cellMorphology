@@ -56,6 +56,9 @@ cellW2=as.matrix(cellW2)
 ## ----------------------------------------------
 datadir="docs/"
 cellM2=read.table(paste(datadir,"MYCRAS_20150522_RowA1-6_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+tbl=read.table(paste(datadir,"MYCRAS_20150522_RowA7-18_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+cellM2=rbind(cellM2,tbl)
+rm(tbl)
 annM2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
 for (k in 1:ncol(annM2)) if (is.character(annM2[,k])) annM2[,k]=gsub("'","",annM2[,k])
 out=as.data.frame(t(sapply(annM2[which(annM2[,11]!=""),11],function(x) {
@@ -286,7 +289,7 @@ annW=ann
 ## Pair-wise correlation of samples and features
 
 cohort="_wt906"
-cohort="_mycRas105"
+cohort="_mycRas289"
 
 distMethod="pearson"
 distMethod="kendall"
@@ -308,8 +311,8 @@ switch(cohort,
         cohortName="Wildtype 906"
         cell=cellW2
     },
-    "_mycRas105"={
-        cohortName="Myc/Ras 105"
+    "_mycRas289"={
+        cohortName="Myc/Ras 289"
         cell=cellM2
     }
 )
@@ -857,8 +860,8 @@ cohort="_mycRas"
 cohort="_wt"
 cohort="_mycRasWt"
 
-for (cohort in c("_wt906","_mycRas105")) {
-    #for (cohort in c("_mycRas","_wt","_mycRasWt","_wt906","_mycRas105")) {
+for (cohort in c("_wt906","_mycRas289")) {
+    #for (cohort in c("_mycRas","_wt","_mycRasWt","_wt906","_mycRas289")) {
     kindFlag="cluster"
     kindFlag="biology"
 
@@ -880,9 +883,9 @@ for (cohort in c("_wt906","_mycRas105")) {
            cohortName="Wildtype 906"
            cell=cellW2
         },
-        "_mycRas105"={
-           cohortName="Myc/Ras 105"
-           cell=cellM2
+        "_mycRas289"={
+            cohortName="Myc/Ras 289"
+            cell=cellM2
         }
     )
     if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
@@ -951,7 +954,7 @@ for (cohort in c("_wt906","_mycRas105")) {
         } else {
             clustInfo=ann[which(ann$type==grpUniq[gId]),]
             clustInfo$clustId=clustInfo$featUniq
-            if (cohort%in%c("_wt906","_mycRas105")) {
+            if (cohort%in%c("_wt906","_mycRas289")) {
                 clustInfo$good=1
             } else {
                 clustInfo$good=0
@@ -1099,7 +1102,7 @@ for (cohort in c("_wt906","_mycRas105")) {
             cell_rbfW2=cell_rbf
             cell_rbfmW2=cell_rbfm
         },
-        "_mycRas105"={
+        "_mycRas289"={
             sdSamPcM2=sdSamPc
             sdSamMnM2=sdSamMn
             sdFeatPcM2=sdFeatPc
@@ -1220,8 +1223,8 @@ for (thisFlag in c("_mycRas","_wt")) {
 ## -------------------
 ## Test for association of clusters defined by the 3 feature types
 
-cohort="_wt906"
-cohort="_mycRas105"
+cohort="_mycRas289"; orderFlag=""
+cohort="_wt906"; orderFlag="_mycRas289Ord"
 
 datadir=""
 
@@ -1233,7 +1236,7 @@ switch(cohort,
         cell=cellW2
         annCell=annCellW2
     },
-    "_mycRas105"={
+    "_mycRas289"={
         cell=cellM2
         annCell=annCellM2
     }
@@ -1248,9 +1251,12 @@ if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
     ann_rbfm=ann_rbfm2
 }
 
+type2Flag=""
+type2Flag="_reducedBioFeatPC"
+
 out=matrix(nrow=nrow(annCell),ncol=length(nClustList)*length(typeList),dimnames=list(annCell$id,paste("clustId_",nClustList,"_",rep(typeList,each=length(nClustList)),sep="")))
 for (typeFlag in typeList) {
-    clustInfo=read.table(paste(datadir,cohort,"_",typeFlag,"_kendall/clusterInfoSample",cohort,"_",typeFlag,"_kendall.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+    clustInfo=read.table(paste(datadir,cohort,orderFlag,"_",typeFlag,type2Flag,"_kendall/clusterInfoSample",cohort,orderFlag,"_",typeFlag,type2Flag,"_kendall.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
     for (nClust in nClustList) {
         out[match(clustInfo$id,rownames(out)),paste("clustId_",nClust,"_",typeFlag,sep="")]=clustInfo[,paste("clustId_",nClust,sep="")]
     }
@@ -1274,10 +1280,20 @@ for (cId in 1:length(nClustList)) {
     }
 }
 colnames(pvalMat)=nm
-tbl=cbind(id=rownames(pvalMat),as.data.frame(pvalMat))
+tbl=cbind(id=paste("nClust_",nClustList,sep=""),as.data.frame(pvalMat))
 rownames(tbl)=NULL
 write.table(tbl, paste("pvalFeature_forClusterSample",cohort,typeflag,"_reducedBioFeatPC_kendall.txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
 
+out=cbind(pvalMat,rep(1,nrow(pvalMat)))
+ttl=rep("",nrow(out)*ncol(out))
+ttl[seq(2,length(ttl),by=length(typeList)+1)]=paste("nClust ",nClustList,sep="")
+png(paste("pvalFeature_forClusterSample",cohort,typeflag,"_reducedBioFeatPC_kendall.png",sep=""))
+barplot(-log10(c(t(out))),ylab="-log10(p-value)",names.arg=ttl,col=colList[1:(length(typeList)+1)],las=3)
+dev.off()
+
+## Optimum concordance among the 3 feature types: 5 sample clusters
+
+## ----------------------------------------
 
 ####################################################################
 ####################################################################
@@ -1287,7 +1303,7 @@ cohort="_mycRas"
 cohort="_wt"
 
 cohort="_wt906"
-cohort="_mycRas105"
+cohort="_mycRas289"
 
 featureFlag=""
 featureFlag="_reducedFeatMean"
@@ -1301,7 +1317,7 @@ subsetList=c("")
 plotCutoffFlag=T
 plotCutoffFlag=F
 
-for (cohort in c("_wt906","_mycRas105")) {
+for (cohort in c("_wt906","_mycRas289")) {
     #cohortName=ifelse(cohort=="_mycRas","Myc/Ras","Wildtype")
     switch(cohort,
         "_mycRas"={
@@ -1320,8 +1336,8 @@ for (cohort in c("_wt906","_mycRas105")) {
             cohortName="Wildtype 906"
             cell=cellW2
         },
-        "_mycRas105"={
-            cohortName="Myc/Ras 105"
+        "_mycRas289"={
+            cohortName="Myc/Ras 289"
             cell=cellM2
         }
     )

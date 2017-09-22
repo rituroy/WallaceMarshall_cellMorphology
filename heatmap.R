@@ -8,8 +8,8 @@ load("results/tmp_w5969.RData")
 datVer="w906"
 datVerList=c("w906","w5969")
 datVerList=c("w5969")
-datVerList=c("m105")
 datVerList=c("w906")
+datVerList=c("m289")
 for (datVer in datVerList) {
     if (datVer=="w5969") {load("results/tmp_w5969.RData"); datVer="w5969"}
     
@@ -62,8 +62,8 @@ for (datVer in datVerList) {
         "w906"={
             datadir="results/wt906/cor/"
         },
-        "m105"={
-            datadir="results/mycRas105/cor/"
+        "m289"={
+            datadir="results/mycRas289/cor/"
         }
     )
     datadir=""
@@ -142,8 +142,8 @@ for (datVer in datVerList) {
         "w906"={
             datadir2[1]=paste("results/wt906/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
         },
-        "m105"={
-            datadir2[1]=paste("results/mycRas105/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
+        "m289"={
+            datadir2[1]=paste("results/mycRas289/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
         }
     )
 
@@ -156,8 +156,8 @@ for (datVer in datVerList) {
         "w906"={
             datadir2[2]=paste("results/wt906/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
         },
-        "m105"={
-            datadir2[2]=paste("results/mycRas105/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
+        "m289"={
+            datadir2[2]=paste("results/mycRas289/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
         }
     )
     orderFlag[2]=""
@@ -178,22 +178,18 @@ for (datVer in datVerList) {
         "w906"={
             cohortList=c("_wt906")
         },
-        "m105"={
-            cohortList=c("_mycRas105")
+        "m289"={
+            cohortList=c("_mycRas289")
         }
     )
     subsetFList=""
-    type2Flag=""; typeList=""
-    type2Flag=""; typeList="cell"
-    type2Flag=""; typeList=c(sort(unique(ann$type)))
     type2Flag=""; typeList=c("",sort(unique(ann$type)))
     type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type)))
     distMethod="pearson"
     distMethod="kendall"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
-    orderFlag[1]="_wtOrd"; datadir2[1]=""
+    orderFlag[1]="_mycRas289Ord"; datadir2[1]=""
     orderFlag[1]=""
-    orderFlag[1]="_mycRas105Ord"; datadir2[1]=""
     
     for (orderSam in orderSamList) {
         orderFlag[2]=orderSam
@@ -252,8 +248,8 @@ for (datVer in datVerList) {
                         sdFeatPc=sdFeatPcW2
                         sdFeatMn=sdFeatMnW2
                     },
-                    "_mycRas105"={
-                        cohortName="Myc/Ras 105"
+                    "_mycRas289"={
+                        cohortName="Myc/Ras 289"
                         cell=cellM2
                         annCell=annCellM2
                         cell_rbf=cell_rbfM2
@@ -426,6 +422,8 @@ for (datVer in datVerList) {
                                 }
                             }
                             
+                            cat("\n\n=========== 60 ",fNameOut,"\nnClust[2] ",nClust[2],"\n",sep="")
+
                             if (type2Flag%in%c("_reducedFeatPC_PC","_reducedFeatPC","_reducedFeatMean","_noisyFeat")) {
                                 limit1=c(-2,2)
                                 nClust=c(NA,NA)
@@ -442,6 +440,8 @@ for (datVer in datVerList) {
                                 nClust=c(5,NA)
                             }
                             
+                            
+                            cat("\n\n=========== 61 ",fNameOut,"\nnClust[2] ",nClust[2],"\n",sep="")
                             
                             geneBar=""
                             geneBar="clusterPr"
@@ -717,7 +717,7 @@ for (datVer in datVerList) {
                             ## -------------------
                             if (typeFlag=="") arrayData2=arrayData else arrayData2=arrayData[which(annFeat$type==typeFlag),]
                             #save(arrayData2,file=paste("arrayData2",cohort,ifelse(typeFlag=="","",paste("_",typeFlag,sep="")),type2Flag,subsetFlag,".RData",sep=""))
-                            save(arrayData2,file=paste("arrayData2",cohort,subsetFlag,ifelse(typeFlag=="","",paste("_",typeFlag,sep="")),type2Flag,".RData",sep=""))
+                            #save(arrayData2,file=paste("arrayData2",cohort,subsetFlag,ifelse(typeFlag=="","",paste("_",typeFlag,sep="")),type2Flag,".RData",sep=""))
                             
                             if (sampleBar=="cluster") {
                                 fNameOut4=sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut))
@@ -846,7 +846,7 @@ for (datVer in datVerList) {
                             }
                             #par(mfrow=c(length(type3List),1))
                             for (type3Flag in type3List) {
-                                cat("===========",type3Flag,"1 =========\n\n")
+                                #cat("===========",type3Flag,"1 =========\n\n")
                                 if (sepFClustFlag & type2Flag%in%c("","_reducedBioFeatPC","_reducedBioFeatMean")) {
                                     fNameOut2=paste(fNameOut,"_",type3Flag,sep="")
                                 } else {
@@ -867,7 +867,7 @@ for (datVer in datVerList) {
                                     for (type4Flag in sort(unique(annFeatAll$type))) {
                                         fNameOut4=paste(fNameOut,"_",type4Flag,sep="")
                                         arrayData2=arrayData[which(annFeat$type==type4Flag),]
-                                        if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
+                                        if (orderFlag[1]%in%c("_mycRas289Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
                                             #fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut2)))))
                                             fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],sub("Ord","",orderFlag[1]),fNameOut2)))))
                                             #fNameOut4=sub("spearman","kendall",sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut2))))))
@@ -908,7 +908,7 @@ for (datVer in datVerList) {
                                     clustR=NA
                                     nClust[1]=NA
                                 } else {
-                                    if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
+                                    if (orderFlag[1]%in%c("_mycRas289Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord")) {
                                         #fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut)))))
                                         fNameOut4=sub(cohort,"",sub(subsetFFlag,"",sub(subsetFlag,"",sub(orderFlag[2],"",sub(orderFlag[1],sub("Ord","",orderFlag[1]),fNameOut)))))
                                         clustInfo=read.table(paste(datadir2[1],fNameOut4,"/clusterInfoFeature",fNameOut4,ifelse(type3Flag=="","","_"),type3Flag,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
@@ -1077,16 +1077,16 @@ for (datVer in datVerList) {
                                 }
                                 
                                 ## -------------------
-                                print("summary(c(arrayData))")
-                                print(summary(c(arrayData)))
-                                print("quantile(abs(c(arrayData)),probs=seq(0,1,by=.1),na.rm=T)")
-                                print(quantile(abs(c(arrayData)),probs=seq(0,1,by=.1),na.rm=T))
+                                #print("summary(c(arrayData))")
+                                #print(summary(c(arrayData)))
+                                #print("quantile(abs(c(arrayData)),probs=seq(0,1,by=.1),na.rm=T)")
+                                #print(quantile(abs(c(arrayData)),probs=seq(0,1,by=.1),na.rm=T))
                                 main=NULL
                                 main=header
                                 
                                 if (class(clustC)=="hclust") nClust[2]=ifelse(ncol(arrayData)>10,10,NA)
                                 
-                                cat("===========",type3Flag,"3 =========\n\n")
+                                #cat("===========",type3Flag,"3 =========\n\n")
                                 subDir=""
                                 subDir <- paste(fNameOut,sep="")			
                                 if (!file.exists(subDir)){
@@ -1094,7 +1094,7 @@ for (datVer in datVerList) {
                                 }
                                 subDir=paste(subDir,"/",sep="")
                                 if (outFormat=="png") {
-                                    if (orderFlag[1]%in%c("_mycRas105Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord") & sepFClustFlag & type3Flag!=typeFlag) {
+                                    if (orderFlag[1]%in%c("_mycRas289Ord","_wt906Ord","_mycRasOrd","_wtOrd","_wt_classSet1Ord") & sepFClustFlag & type3Flag!=typeFlag) {
                                         margins=c(23,36)
                                     } else {
                                         margins=c(6,1)
@@ -1111,6 +1111,8 @@ for (datVer in datVerList) {
                                 hcc=heatmap3(x=arrayData, Rowv=clustR, Colv=clustC, distfun=distMethod, hclustfun=hclust, symm=F, ColSideColors=colCol, RowSideColors=colRow, labCol=nameCol, labRow=nameRow, ncr=nClust[1], ncc=nClust[2], scale="none", na.rm=F, margins=margins, main=main, xlab=NULL, ylab=NULL, zlm=limit2,cexCol=2, , high=colHM[1], low=colHM[2], mid=colHM[3])
                                 dev.off()
                                 
+                                cat("\n\n=========== 101 ",fNameOut,"\nnClust[2] ",nClust[2],"\n",sep="")
+
                                 ## -------------------
                                 if (is.na(nClust[1])) {
                                     if (class(clustR)=="hclust") i=clustR$order else i=1:nrow(annFeat)
@@ -1121,7 +1123,6 @@ for (datVer in datVerList) {
                                         plot(clustR,main=paste("Feature clusters with ",nClust[1]," main clusters marked in red",sep=""),xlab="",sub="",ylab=NULL,axes=F, cex=.2); rect.hclust(clustR,k=nClust[1])
                                         dev.off()
                                     }
-                                    
                                     clustId=cutree(clustR,k=nClust[1])[clustR$order]
                                     k1=which(!duplicated(clustId))
                                     for (k in 1:length(k1)) {
@@ -1131,36 +1132,36 @@ for (datVer in datVerList) {
                                 }
                                 write.table(tbl, paste(subDir,"clusterInfoFeature",fNameOut2,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                                 
-                                if (is.na(nClust[2])) {
-                                    if (class(clustC)=="hclust") j=clustR$order else j=1:nrow(annSam)
-                                    tbl=cbind(annSam[j,],clustId="cluster1",order=1:nrow(annSam))
-                                } else {
-                                    if (F) {
-                                        pdf(paste(subDir,"clusterSamples",fNameOut,".pdf",sep=""))
-                                        plot(clustC,main=paste("Sample clusters with ",nClust[2]," main clusters marked in red",sep=""),xlab="",sub="",ylab=NULL,axes=F, cex=.2); rect.hclust(clustC,k=nClust[2])
-                                        dev.off()
-                                    }
-                                    
-                                    clustId=cutree(clustC,k=nClust[2])[clustC$order]
-                                    k1=which(!duplicated(clustId))
-                                    for (k in 1:length(k1)) {
-                                        clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
-                                    }
-                                    
-                                    tbl=cbind(annSam[clustC$order,],clustId,order=1:nrow(annSam))
-                                    out=matrix(nrow=nrow(tbl),ncol=9)
-                                    colnames(out)=paste("clustId_",2:10,sep="")
-                                    for (kk in 1:ncol(out)) {
-                                        clustId=cutree(clustC,k=as.integer(sub("clustId_","",colnames(out)[kk])))[clustC$order]
+                                if (!sepFClustFlag | (sepFClustFlag & type3Flag==typeFlag)) {
+                                    if (is.na(nClust[2])) {
+                                        if (class(clustC)=="hclust") j=clustR$order else j=1:nrow(annSam)
+                                        tbl=cbind(annSam[j,],clustId="cluster1",order=1:nrow(annSam))
+                                    } else {
+                                        if (F) {
+                                            pdf(paste(subDir,"clusterSamples",fNameOut,".pdf",sep=""))
+                                            plot(clustC,main=paste("Sample clusters with ",nClust[2]," main clusters marked in red",sep=""),xlab="",sub="",ylab=NULL,axes=F, cex=.2); rect.hclust(clustC,k=nClust[2])
+                                            dev.off()
+                                        }
+                                        clustId=cutree(clustC,k=nClust[2])[clustC$order]
                                         k1=which(!duplicated(clustId))
                                         for (k in 1:length(k1)) {
                                             clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
                                         }
-                                        out[,kk]=clustId
+                                        tbl=cbind(annSam[clustC$order,],clustId,order=1:nrow(annSam))
+                                        out=matrix(nrow=nrow(tbl),ncol=9)
+                                        colnames(out)=paste("clustId_",2:10,sep="")
+                                        for (kk in 1:ncol(out)) {
+                                            clustId=cutree(clustC,k=as.integer(sub("clustId_","",colnames(out)[kk])))[clustC$order]
+                                            k1=which(!duplicated(clustId))
+                                            for (k in 1:length(k1)) {
+                                                clustId[which(clustId==clustId[k1[k]])]=paste("cluster",k,sep="")
+                                            }
+                                            out[,kk]=clustId
+                                        }
+                                        tbl=cbind(tbl,out)
                                     }
-                                    tbl=cbind(tbl,out)
+                                    write.table(tbl, paste(subDir,"clusterInfoSample",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                                 }
-                                write.table(tbl, paste(subDir,"clusterInfoSample",fNameOut,".txt",sep=""), sep="\t", col.names=T, row.names=F, quote=F)
                             } ## for (type3Flag in type3List) {
                             
                             if (!is.null(colRow)) {
@@ -1205,9 +1206,9 @@ for (datVer in datVerList) {
                             if (!is.null(colCol)) {
                                 for (varId in 1:length(varListAll)) {
                                     if (varListAll[varId]%in%c("sd")) {
-                                        width = 480; height = 140
+                                        width=480; height=140
                                     } else {
-                                        width = 480; height = 480
+                                        width=480; height=480
                                     }
                                     if (outFormat=="png") {
                                         png(paste("heatmapSampleColorBarLegend_",varListAll[varId],".png",sep=""),width=width,height=height)
