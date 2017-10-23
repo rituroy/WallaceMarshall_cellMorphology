@@ -1,16 +1,34 @@
-## Set params:
-## sepFClustFlag, getCorFlag, orderFlag, typeList, type2Flag, cohortList, datVerList
+options(echo=TRUE) # if you want see commands in output file
+args <- commandArgs(trailingOnly = TRUE)
+print(args)
+# trailingOnly=TRUE means that only your arguments are returned, check:
+# print(commandArgs(trailingOnly=FALSE))
+
+datVerListThis=args[1]
+typeListThis=args[2]
+rm(args)
+
+'
+qRscript tmp.R "m289" "all"
+qRscript tmp.R "w906" "all"
+qRscript tmp.R "w906" "cell"
+qRscript tmp.R "w906" "mitochondria"
+qRscript tmp.R "w906" "nucleus"
+
+'
+
+load("tmp.RData")
 
 ####################################################################
 ####################################################################
-#load("results/tmp_w3830.RData"); datVer="w3830"
-load("results/tmp_w5969.RData")
+#load("results/tmp_w5969.RData")
 datVer="w906"
 datVerList=c("w906","w5969")
 datVerList=c("w5969")
 datVerList=c("w906")
 datVerList=c("m289")
 datVerList=c("m289","w906")
+datVerList=datVerListThis
 for (datVer in datVerList) {
     if (datVer=="w5969") {load("results/tmp_w5969.RData"); datVer="w5969"}
     
@@ -189,6 +207,10 @@ for (datVer in datVerList) {
     subsetFList=""
     type2Flag=""; typeList=c("",sort(unique(ann$type)))
     type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type)))
+    
+    if (typeListThis=="all") typeListThis=c("",sort(unique(ann$type)))
+    typeList=typeListThis
+    
     distMethod="pearson"
     distMethod="kendall"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
@@ -1283,69 +1305,3 @@ for (datVer in datVerList) {
         }
     }
 }
-
-####################################################################
-####################################################################
-## nbClust
-
-colList=c("brown","red","orange","green","cyan","blue","magenta","purple","darkgreen")
-
-png("nbClust.png",width=2*480, height=1*480)
-par(mar=c(5, 4, 4, 2) + 0.1)
-par(mar=c(7, 4, 4, 2) + 0.1)
-datadir="/Users/royr/UCSF/WallaceMarshall/results/nbClust/"
-datVerList=c("m289","w906")
-kk=1
-grpUniq=c()
-for (datVer in datVerList) {
-    switch(datVer,
-    "w5969"={
-        cohortList=c("_wt","_mycRas","_mycRasWt")
-        cohortList=c("_wt","_mycRas")
-        cohortList=c("_mycRas")
-    },
-    "w906"={
-        cohortList=c("_wt906")
-    },
-    "m289"={
-        cohortList=c("_mycRas289")
-    }
-    )
-    typeList=c("",sort(unique(ann$type)))
-    offset=0
-    for (cohort in cohortList) {
-        for (typeFlag in typeList) {
-            cat("\n\n=========== ",cohort,", ",typeFlag,"\n",sep="")
-            load(paste(datadir,"nbClust",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_reducedBioFeatPC_kendall.RData",sep=""))
-            x=apply(res$All.index,2,function(x) {
-                nClust=(1:length(x))+1
-                k=which(is.finite(x) & !is.na(x))
-                y=nClust[k][which.max(x[k])]
-                #print(y)
-                if (length(y)==0) y=NA
-                y
-            })
-            #print(table(x))
-            #print(colnames(res$Best.nc)[which(res$Best.nc["Number_clusters",]==5)])
-            #res[["All.index"]][,"Gap"]
-            print(res$Best.nc["Number_clusters","SDbw"])
-            if (kk==1) {
-                plot((1:ncol(res$Best.nc))+offset, res$Best.nc["Number_clusters",],ylim=c(0,16),xlab="",ylab="Best number of clusters",xaxt="n",col=colList[kk])
-                axis(side=1,at=1:ncol(res$Best.nc),labels=colnames(res$Best.nc),las=3)
-            } else {
-                points((1:ncol(res$Best.nc))+offset, res$Best.nc["Number_clusters",],xaxt="n",col=colList[kk])
-            }
-            grpUniq=c(grpUniq,paste(sub("_","",cohort),typeFlag))
-            kk=kk+1
-            offset=offset+0.05
-        }
-    }
-}
-dev.off()
-
-png("nbClust_ColorBarLegend.png")
-sampleColorLegend(tls=grpUniq,col=colList,legendTitle="Best number of clusters from")
-dev.off()
-
-####################################################################
-####################################################################
