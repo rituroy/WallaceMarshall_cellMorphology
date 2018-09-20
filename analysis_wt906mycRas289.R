@@ -23,162 +23,68 @@ capWords=function(s, strict=FALSE) {
 ####################################################################
 ####################################################################
 ## Section 1
+## ----------------------------------------------
+datadir="docs/"
+cellW2=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+annW2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+for (k in 1:ncol(annW2)) if (is.character(annW2[,k])) annW2[,k]=gsub("'","",annW2[,k])
+out=as.data.frame(t(sapply(annW2[which(annW2[,11]!=""),11],function(x) {
+    y=strsplit(x," = ")[[1]]
+    gsub(" |:","",y)
+},USE.NAMES=F)),stringsAsFactors=F)
+names(out)=c("featId","featUniq")
+annW2=annW2[,c(1,7)]
+names(annW2)=c("feature","featId")
+annW2$featUniq=out$featUniq[match(annW2$featId,out$featId)]
+rm(out)
+annW2$type=""
+if (F) {
+    annW2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+    tmpC=rep("",ncol(cellW2))
+    annW2=data.frame(feature=annW2[,1],type=tmpC,stringsAsFactors=F)
+}
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("cell"))=="cell")]="cell"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("mito"))=="mito")]="mitochondria"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
+annW2$type[which(substr(tolower(annW2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
+annCellW2=data.frame(id=paste("w2_",1:nrow(cellW2),sep=""),stringsAsFactors=F)
+colnames(cellW2)=annW2$feature
+rownames(cellW2)=annCellW2$id
+annCellW2$junk=0
+cellW2=as.matrix(cellW2)
 
 ## ----------------------------------------------
 datadir="docs/"
-cellW3=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED[1].csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-annW3=read.table(paste(datadir,"20170729_cellFeatures_categorized(1).txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-for (k in 1:ncol(annW3)) if (is.character(annW3[,k])) annW3[,k]=gsub("'","",annW3[,k])
-names(annW3)="feature"
+cellM2=read.table(paste(datadir,"MYCRAS_20150522_RowA1-6_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+tbl=read.table(paste(datadir,"MYCRAS_20150522_RowA7-18_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
+cellM2=rbind(cellM2,tbl)
+rm(tbl)
+annM2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+for (k in 1:ncol(annM2)) if (is.character(annM2[,k])) annM2[,k]=gsub("'","",annM2[,k])
+out=as.data.frame(t(sapply(annM2[which(annM2[,11]!=""),11],function(x) {
+    y=strsplit(x," = ")[[1]]
+    gsub(" |:","",y)
+},USE.NAMES=F)),stringsAsFactors=F)
+names(out)=c("featId","featUniq")
+annM2=annM2[,c(1,7)]
+names(annM2)=c("feature","featId")
+annM2$featUniq=out$featUniq[match(annM2$featId,out$featId)]
+rm(out)
+annM2$type=""
 if (F) {
-    out=as.data.frame(t(sapply(annW3[which(annW3[,11]!=""),11],function(x) {
-        y=strsplit(x," = ")[[1]]
-        gsub(" |:","",y)
-    },USE.NAMES=F)),stringsAsFactors=F)
-    names(out)=c("featId","featUniq")
-    annW3=annW3[,c(1,7)]
-    names(annW3)=c("feature","featId")
-    annW3$featUniq=out$featUniq[match(annW3$featId,out$featId)]
-    rm(out)
+    annM2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
+    tmpC=rep("",ncol(cellM2))
+    annM2=data.frame(feature=annM2[,1],type=tmpC,stringsAsFactors=F)
 }
-annW3$type=""
-if (F) {
-    annW3=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-    tmpC=rep("",ncol(cellW3))
-    annW3=data.frame(feature=annW3[,1],type=tmpC,stringsAsFactors=F)
-}
-annW3$type[which(substr(tolower(annW3$feature),1,nchar("cell"))=="cell")]="cell"
-annW3$type[which(substr(tolower(annW3$feature),1,nchar("mito"))=="mito")]="mitochondria"
-annW3$type[which(substr(tolower(annW3$feature),1,nchar("nuc"))=="nuc")]="nucleus"
-annW3$type[which(substr(tolower(annW3$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
-annCellW3=data.frame(id=paste("w3_",1:nrow(cellW3),sep=""),stringsAsFactors=F)
-colnames(cellW3)=annW3$feature
-rownames(cellW3)=annCellW3$id
-annCellW3$junk=0
-cellW3=as.matrix(cellW3)
-
-## ----------------------------------------------
-datadir="docs/"
-cellM3=read.table(paste(datadir,"20170905_MYCRAS_RowA1-18_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-annM3=read.table(paste(datadir,"20170729_cellFeatures_categorized(1).txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-for (k in 1:ncol(annM3)) if (is.character(annM3[,k])) annM3[,k]=gsub("'","",annM3[,k])
-names(annM3)="feature"
-if (F) {
-    out=as.data.frame(t(sapply(annM3[which(annM3[,11]!=""),11],function(x) {
-        y=strsplit(x," = ")[[1]]
-        gsub(" |:","",y)
-    },USE.NAMES=F)),stringsAsFactors=F)
-    names(out)=c("featId","featUniq")
-    annM3=annM3[,c(1,7)]
-    names(annM3)=c("feature","featId")
-    annM3$featUniq=out$featUniq[match(annM3$featId,out$featId)]
-    rm(out)
-}
-annM3$type=""
-if (F) {
-    annM3=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-    tmpC=rep("",ncol(cellM3))
-    annM3=data.frame(feature=annM3[,1],type=tmpC,stringsAsFactors=F)
-}
-annM3$type[which(substr(tolower(annM3$feature),1,nchar("cell"))=="cell")]="cell"
-annM3$type[which(substr(tolower(annM3$feature),1,nchar("mito"))=="mito")]="mitochondria"
-annM3$type[which(substr(tolower(annM3$feature),1,nchar("nuc"))=="nuc")]="nucleus"
-annM3$type[which(substr(tolower(annM3$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
-annCellM3=data.frame(id=paste("m3_",1:nrow(cellM3),sep=""),stringsAsFactors=F)
-colnames(cellM3)=annM3$feature
-rownames(cellM3)=annCellM3$id
-annCellM3$junk=0
-cellM3=as.matrix(cellM3)
-
-kk=c()
-for (k in 1:ncol(cellM3)) {
-    if (any(is.na(cellM3[,k])!=is.na(cellM2[,k])) | any(cellM3[,k]!=cellM2[,k],na.rm=T)) kk=c(kk,k)
-}
-
-k1=kk[4]
-for (k1 in kk) {
-    j=which(cellM2[,k1]!=cellM3[,k1]); j=j[1:min(4,length(j))]
-    print(cbind(cellM2[,k1],cellM3[,k1])[j,])
-}
-
-#write.table(cellM2,file=paste("MYCRAS_20150522_RowA1-18_CONCATENATED.csv",sep=""),append=F,col.names=F,row.names=F,sep=",",quote=F)
-
-cellW2=cellW3
-annW2=annW3
-annCellW2=annCellW3
-
-cellM2=cellM3
-annM2=annM3
-annCellM2=annCellM3
-
-rm(cellW3,annW3,annCellW3,cellM3,annM3,annCellM3)
-
-if (F) {
-    ## Old
-    ## ----------------------------------------------
-    datadir="docs/"
-    cellW2=read.table(paste(datadir,"20170707_WT_RowAB_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-    annW2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-    for (k in 1:ncol(annW2)) if (is.character(annW2[,k])) annW2[,k]=gsub("'","",annW2[,k])
-    out=as.data.frame(t(sapply(annW2[which(annW2[,11]!=""),11],function(x) {
-        y=strsplit(x," = ")[[1]]
-        gsub(" |:","",y)
-    },USE.NAMES=F)),stringsAsFactors=F)
-    names(out)=c("featId","featUniq")
-    annW2=annW2[,c(1,7)]
-    names(annW2)=c("feature","featId")
-    annW2$featUniq=out$featUniq[match(annW2$featId,out$featId)]
-    rm(out)
-    annW2$type=""
-    if (F) {
-        annW2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-        tmpC=rep("",ncol(cellW2))
-        annW2=data.frame(feature=annW2[,1],type=tmpC,stringsAsFactors=F)
-    }
-    annW2$type[which(substr(tolower(annW2$feature),1,nchar("cell"))=="cell")]="cell"
-    annW2$type[which(substr(tolower(annW2$feature),1,nchar("mito"))=="mito")]="mitochondria"
-    annW2$type[which(substr(tolower(annW2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
-    annW2$type[which(substr(tolower(annW2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
-    annCellW2=data.frame(id=paste("w2_",1:nrow(cellW2),sep=""),stringsAsFactors=F)
-    colnames(cellW2)=annW2$feature
-    rownames(cellW2)=annCellW2$id
-    annCellW2$junk=0
-    cellW2=as.matrix(cellW2)
-
-    ## ----------------------------------------------
-    datadir="docs/"
-    cellM2=read.table(paste(datadir,"MYCRAS_20150522_RowA1-6_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-    tbl=read.table(paste(datadir,"MYCRAS_20150522_RowA7-18_CONCATENATED.csv",sep=""),sep=",",h=F,quote="",comment.char="",as.is=T,fill=T)
-    cellM2=rbind(cellM2,tbl)
-    rm(tbl)
-    annM2=read.table(paste(datadir,"20170729_cellFeatures_categorized.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-    for (k in 1:ncol(annM2)) if (is.character(annM2[,k])) annM2[,k]=gsub("'","",annM2[,k])
-    out=as.data.frame(t(sapply(annM2[which(annM2[,11]!=""),11],function(x) {
-        y=strsplit(x," = ")[[1]]
-        gsub(" |:","",y)
-    },USE.NAMES=F)),stringsAsFactors=F)
-    names(out)=c("featId","featUniq")
-    annM2=annM2[,c(1,7)]
-    names(annM2)=c("feature","featId")
-    annM2$featUniq=out$featUniq[match(annM2$featId,out$featId)]
-    rm(out)
-    annM2$type=""
-    if (F) {
-        annM2=read.table(paste(datadir,"cellFeatures.txt",sep=""),sep="\t",h=F,quote="",comment.char="",as.is=T,fill=T)
-        tmpC=rep("",ncol(cellM2))
-        annM2=data.frame(feature=annM2[,1],type=tmpC,stringsAsFactors=F)
-    }
-    annM2$type[which(substr(tolower(annM2$feature),1,nchar("cell"))=="cell")]="cell"
-    annM2$type[which(substr(tolower(annM2$feature),1,nchar("mito"))=="mito")]="mitochondria"
-    annM2$type[which(substr(tolower(annM2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
-    annM2$type[which(substr(tolower(annM2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
-    annCellM2=data.frame(id=paste("m2_",1:nrow(cellM2),sep=""),stringsAsFactors=F)
-    colnames(cellM2)=annM2$feature
-    rownames(cellM2)=annCellM2$id
-    annCellM2$junk=0
-    cellM2=as.matrix(cellM2)
-
-}
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("cell"))=="cell")]="cell"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("mito"))=="mito")]="mitochondria"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("nuc"))=="nuc")]="nucleus"
+annM2$type[which(substr(tolower(annM2$feature),1,nchar("CelVarEnergy"))==tolower("CelVarEnergy"))]="cell"
+annCellM2=data.frame(id=paste("m2_",1:nrow(cellM2),sep=""),stringsAsFactors=F)
+colnames(cellM2)=annM2$feature
+rownames(cellM2)=annCellM2$id
+annCellM2$junk=0
+cellM2=as.matrix(cellM2)
 
 ## -------------------
 load("results/tmp_w5969.RData")
@@ -188,7 +94,7 @@ ann_rbfm1=ann_rbfm
 
 ####################################################################
 ####################################################################
-## Section
+## Section 1.2
 
 ## -------------------
 ## Generate tmp_w5969.RData
@@ -384,14 +290,16 @@ annW=ann
 ####################################################################
 ## Pair-wise correlation of samples and features
 
-cohort="_wt906"
-cohort="_mycRas289"
+source(paste(dirSrc,"functions/heatmapAcgh.7.4.R",sep=""))
 
+cohort="_mycRas289"
 cohort="_wt906"
-cohort="_mycRas_289"
 
 distMethod="pearson"
 distMethod="kendall"
+
+transFlag=""; transName="raw data"
+transFlag="_absMedCentered"; transName="abs median-centered data"
 
 switch(cohort,
     "_mycRas"={
@@ -419,7 +327,6 @@ if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
     ann=annW
     ann_rbf=ann_rbf1
     ann_rbfm=ann_rbfm1
-} else if (cohort%in%c("_wt906","_mycRas289")) {
 } else {
     ann=annW2
     ann_rbf=ann_rbf2
@@ -427,7 +334,12 @@ if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
 }
 #cell=cell[1:10,]
 
-if (F) {
+cell1=cell
+if (transFlag=="_absMedCentered") {
+    cell=apply(cell,2,function(x) {abs(x-median(x,na.rm=T))})
+}
+
+if (T) {
 	out=t(apply(cell,2,function(x) {
 		y=c(summary(x))
 		res=vector(mode="numeric",length=7)
@@ -436,21 +348,21 @@ if (F) {
 		res
 	}))
 	sumInfo=cbind(ann,out)
-	write.table(sumInfo,file=paste("summaryFeature",cohort,".txt",sep=""),append=F,col.names=T,row.names=F,sep="\t",quote=F)
+	write.table(sumInfo,file=paste("summaryFeature",transFlag,cohort,".txt",sep=""),append=F,col.names=T,row.names=F,sep="\t",quote=F)
 }
 
-if (F) {
+if (T) {
     timeStamp=Sys.time()
 	corMatSam=cor(t(cell),use="complete.obs",method=distMethod)
     timeStamp=c(timeStamp,Sys.time())
     print(diff(timeStamp))
-	save(corMatSam,file="corMatSam.RData")
+	save(corMatSam,file=paste("corMatSam",transFlag,".RData",sep=""))
 	
     timeStamp=Sys.time()
 	corMat=cor(cell,use="complete.obs",method=distMethod)
     timeStamp=c(timeStamp,Sys.time())
     print(diff(timeStamp))
-	save(corMat,file="corMat.RData")
+	save(corMat,file=paste("corMat",transFlag,".RData",sep=""))
 
 	summary(abs(c(corMat[lower.tri(corMat)])))
 	#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
@@ -460,8 +372,8 @@ if (F) {
     #corMat[lower.tri(corMat)][abs(c(corMat[lower.tri(corMat)]))==1]
     #corMat[abs(corMat)==1]
     
-    png(paste("pairwiseCorFeature_kendall",cohort,".png",sep=""))
-    plot(sort(abs(c(corMat[lower.tri(corMat)]))),main=cohortName)
+    png(paste("pairwiseCorFeature_",distMethod,transFlag,cohort,".png",sep=""))
+    plot(sort(abs(c(corMat[lower.tri(corMat)]))),main=cohortName,xlab="feature-pair",ylab=paste("abs Kendall's corr coeff of ",transName,sep=""))
     dev.off()
 
 	n=ncol(cell)
@@ -479,15 +391,19 @@ if (F) {
 			k=k+1
 		}
 	}
-	write.table(corInfo,file=paste("corrFeature",cohort,".txt",sep=""),append=F,col.names=T,row.names=F,sep="\t",quote=F)
+	write.table(corInfo,file=paste("corrFeature",transFlag,cohort,".txt",sep=""),append=F,col.names=T,row.names=F,sep="\t",quote=F)
 }
 
 datadir="results/"
 datadir=""
+datadir="results/wt906mycRas289/"
+datadir="results/wt906mycRas289/cor/wt906/absMedCentered/"
 sumInfo=read.table(paste(datadir,"summaryFeature",cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
-load(file=paste(datadir,"corMat.RData",sep=""))
-load(file=paste(datadir,"corMatSam.RData",sep=""))
-corInfo=read.table(paste(datadir,"corrFeature",cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+load(file=paste(datadir,"corMat",transFlag,".RData",sep=""))
+load(file=paste(datadir,"corMatSam",transFlag,".RData",sep=""))
+corInfo=read.table(paste(datadir,"corrFeature",transFlag,cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+
+colId="corKend"
 
 corInfo[abs(corInfo$corKend)==1,]
 #feature1              feature2 corKend
@@ -505,7 +421,7 @@ highCorr  FALSE  TRUE
     TRUE     26   235
 "
 xlim=c(0,1); ylim=c(0,4000)
-png(paste("corKend_featureGroup",cohort,".png",sep=""),width=2*480,height=480)
+png(paste("corKend_featureGroup",transFlag,cohort,".png",sep=""),width=2*480,height=480)
 par(mfrow=c(1,2))
 hist(abs(corInfo$corKend[which(corInfo$featUniq1==corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main=paste(cohortName,": Features from same group",sep=""),xlab="Absolute Kendall's correlation coefficient")
 hist(abs(corInfo$corKend[which(corInfo$featUniq1!=corInfo$featUniq2)]),xlim=xlim,ylim=ylim,main=paste(cohortName,": Features from different groups",sep=""),xlab="Absolute Kendall's correlation coefficient")
@@ -521,6 +437,7 @@ quantile(abs(c(cell[,featId1])),probs=seq(0,1,by=.1),na.rm=T)
 ## Correlation plots
 
 subsetFlag="_zernike1Only"
+subsetFlag=""
 for (typeFlag in sort(unique(ann$type))) {
 	header=typeFlag	
 	featId=featId1[ann$type[featId1]==typeFlag]
@@ -535,13 +452,14 @@ for (typeFlag in sort(unique(ann$type))) {
 			x=corInfo[which(corInfo$feature1%in%annFeat$feature & corInfo$feature2%in%annFeat$feature),]
 		}
 	}
-	subDir <- paste(typeFlag,subsetFlag,sep="")			
+    ## --------------------
+	subDir <- paste(typeFlag,subsetFlag,sep="")
 	if (!file.exists(subDir)){
 		dir.create(file.path(subDir))
 	}
 	subDir=paste(subDir,"/",sep="")
-	png(paste(subDir,"corr_feature",cohort,"_",typeFlag,subsetFlag,"_%03d.png",sep=""), width = 6*480, height = 3*480)
-#	par(mar=c(5, 4, 4, 2) + 0.1)
+	png(paste(subDir,"corr_feature",transFlag,cohort,"_",typeFlag,subsetFlag,"_%03d.png",sep=""), width = 6*480, height = 3*480)
+    #par(mar=c(5, 4, 4, 2) + 0.1)
 	par(mar=c(5, 5, 4, 1) + 0.1)
 	par(mfrow=c(3,6))
 	par(cex.main=3,cex.lab=3,cex.axis=1.5)
@@ -551,6 +469,26 @@ for (typeFlag in sort(unique(ann$type))) {
 		plot(cell[,j1],cell[,j2],main=paste("Kendall corr: ",signif(x$corKend[k],2),sep=""),xlab=ann$feature[j1],ylab=ann$feature[j2])
 	}
 	dev.off()
+    ## --------------------
+    subDir <- paste("noTransformation",sep="")
+    if (!file.exists(subDir)){
+        dir.create(file.path(subDir))
+    }
+    subDir <- paste(subDir,"/",typeFlag,subsetFlag,sep="")
+    if (!file.exists(subDir)){
+        dir.create(file.path(subDir))
+    }
+    subDir=paste(subDir,"/",sep="")
+    png(paste(subDir,"corr_feature",transFlag,cohort,"_",typeFlag,subsetFlag,"_%03d.png",sep=""), width = 6*480, height = 3*480)
+    par(mar=c(5, 5, 4, 1) + 0.1)
+    par(mfrow=c(3,6))
+    par(cex.main=3,cex.lab=3,cex.axis=1.5)
+    for (k in order(abs(x$corKend),decreasing=T)[1:min(nrow(x),180)]) {
+        j1=which(ann$feature==x$feature1[k])
+        j2=which(ann$feature==x$feature2[k])
+        plot(cell1[,j1],cell1[,j2],main=paste("Kendall corr: ",signif(x$corKend[k],2),sep=""),xlab=ann$feature[j1],ylab=ann$feature[j2])
+    }
+    dev.off()
 }
 
 grpUniq=unique(sapply(ann$feature[grep("2",ann$feature)],function(x) {
@@ -576,12 +514,13 @@ for (typeFlag in sort(unique(ann$type))) {
 		annFeat=annFeat[i,]
 		x=corInfo[which(corInfo$feature1%in%annFeat$feature & corInfo$feature2%in%annFeat$feature),]
 
-		subDir <- paste(typeFlag,"_",grpUniq[gId],sep="")			
+        ## --------------------
+		subDir <- paste(typeFlag,"_",grpUniq[gId],sep="")
 		if (!file.exists(subDir)){
 			dir.create(file.path(subDir))
 		}
 		subDir=paste(subDir,"/",sep="")
-		png(paste(subDir,"corr_feature",cohort,"_",typeFlag,"_",grpUniq[gId],"_%03d.png",sep=""), width = 6*480, height = 3*480)
+		png(paste(subDir,"corr_feature",transFlag,cohort,"_",typeFlag,"_",grpUniq[gId],"_%03d.png",sep=""), width = 6*480, height = 3*480)
 		par(mar=c(5, 5, 4, 1) + 0.1)
 		par(mfrow=c(3,6))
 		par(cex.main=3,cex.lab=3,cex.axis=1.5)
@@ -591,9 +530,57 @@ for (typeFlag in sort(unique(ann$type))) {
 			plot(cell[,j1],cell[,j2],main=paste("Kendall corr: ",signif(x$corKend[k],2),sep=""),xlab=ann$feature[j1],ylab=ann$feature[j2])
 		}
 		dev.off()
-	}
+        ## --------------------
+        subDir <- paste("noTransformation",sep="")
+        if (!file.exists(subDir)){
+            dir.create(file.path(subDir))
+        }
+        subDir <- paste(subDir,"/",typeFlag,"_",grpUniq[gId],sep="")
+        if (!file.exists(subDir)){
+            dir.create(file.path(subDir))
+        }
+        subDir=paste(subDir,"/",sep="")
+        png(paste(subDir,"corr_feature",transFlag,cohort,"_",typeFlag,"_",grpUniq[gId],"_%03d.png",sep=""), width = 6*480, height = 3*480)
+        par(mar=c(5, 5, 4, 1) + 0.1)
+        par(mfrow=c(3,6))
+        par(cex.main=3,cex.lab=3,cex.axis=1.5)
+        for (k in order(abs(x$corKend),decreasing=T)[1:min(nrow(x),180)]) {
+            j1=which(ann$feature==x$feature1[k])
+            j2=which(ann$feature==x$feature2[k])
+            plot(cell1[,j1],cell1[,j2],main=paste("Kendall corr: ",signif(x$corKend[k],2),sep=""),xlab=ann$feature[j1],ylab=ann$feature[j2])
+        }
+        dev.off()
+    }
 }
 
+## -------------------
+## Check weird pair-wise plots
+
+i=which(ann$type=="mitochondria")
+
+i1=which(ann$feature=="MitoPercentFusedTotalArea")
+i2=which(ann$feature=="MitoPercentFragmentedTotalArea")
+ii1=which(rownames(corMat)=="MitoPercentFusedTotalArea")
+ii2=which(rownames(corMat)=="MitoPercentFragmentedTotalArea")
+
+
+i1=which(ann$feature=="MitoCVHomogeneity")
+i2=which(ann$feature=="MitoVarHomogeneity")
+ii1=which(rownames(corMat)=="MitoCVHomogeneity")
+ii2=which(rownames(corMat)=="MitoVarHomogeneity")
+
+source(paste(dirSrc,"functions/heatmapAcgh.7.4.R",sep=""))
+png(paste("pairwisePlot_",ann$feature[i1],"_",ann$feature[i2],".png",sep=""),width=3*240,height=2*240)
+par(mfcol=c(2,3))
+x=apply(cell1,2,function(x) {x-median(x,na.rm=T)})
+plot(cell1[,i1],x[,i1],main=ann$feature[i1],xlab="Raw data",ylab="Median centered data",pch=20,cex=.5)
+plot(cell1[,i2],x[,i2],main=ann$feature[i2],xlab="Raw data",ylab="Median centered data",pch=20,cex=.5)
+plot(cell1[,i1],cell[,i1],main=ann$feature[i1],xlab="Raw data",ylab="Abs(median centered data)",pch=20,cex=.5)
+plot(cell1[,i2],cell[,i2],main=ann$feature[i2],xlab="Raw data",ylab="Abs(median centered data)",pch=20,cex=.5)
+plot(cell[,i1],cell[,i2],xlab=ann$feature[i1],ylab=ann$feature[i2],pch=20,cex=.5,col="green")
+points(cell1[,i1],cell1[,i2],pch=20,cex=.5,col="red")
+sampleColorLegend(tls=c("Abs(median centered data","Raw data"),col=c("green","red"),legendTitle="")
+dev.off()
 
 ####################################################################
 ####################################################################
@@ -808,11 +795,12 @@ library(fpc)
 classifFlag="averagedist"
 classifFlag="centroid"
 
-datTypeFlag="sample"
 datTypeFlag="feature"
+datTypeFlag="sample"
 
 #for (datTypeFlag in c("sample","feature")) {
 for (datTypeFlag in c("sample")) {
+    datadir2=paste("results/wt906/predictionStrength/",classifFlag,"/",sep="")
     datadir2=paste("predictionStrength/",classifFlag,"/",sep="")
     fileList=dir(datadir2)
     if (datTypeFlag=="feature") {
@@ -821,7 +809,9 @@ for (datTypeFlag in c("sample")) {
         fId=grep("predictionStrengthSam_",fileList)
     }
     fileList=fileList[fId]
-    fileList=fileList[grep("_mycRasWt",fileList)]
+    fileList=fileList[grep(".RData",fileList)]
+    #fileList=fileList[grep("_mycRasWt",fileList)]
+    fileList=fileList[grep("_wt906",fileList)]
     fileList=fileList[grep("_2clustMin",fileList)]
     cat("\n\n===============================================\n")
     cat("============ ",datTypeFlag," ================\n")
@@ -832,6 +822,7 @@ for (datTypeFlag in c("sample")) {
         x=c(sapply(fNameOut,function(x){
             y=strsplit(x,"_")[[1]]
             if (y[3]!="mean") y=c(y[1:2],"min",y[3:length(y)])
+            if (y[8]!="reducedBioFeatPC") y=c(y[1:7],"reducedBioFeatPC",y[8:length(y)])
             y
         },USE.NAMES=F))
         names(x)=c("predictionStrengthSam","centroid","aggregation","2clustMin","15clustMax","20perms","cohort","reducedBioFeatPC","distMethod")
@@ -849,6 +840,12 @@ for (datTypeFlag in c("sample")) {
         },
         "_mycRasWt"={
             cohortName="Myc/Ras & Wildtype"
+        },
+        "_wt906"={
+            cohortName="Wildtype 906"
+        },
+        "_mycRas289"={
+            cohortName="Myc/Ras 289"
         }
         )
         
@@ -992,7 +989,6 @@ for (cohort in c("_wt906","_mycRas289")) {
         ann=annW
         #ann_rbf=ann_rbf1
         #ann_rbfm=ann_rbfm1
-    } else if (cohort%in%c("_wt906","_mycRas289")) {
     } else {
         ann=annW2
         #ann_rbf=ann_rbf2
@@ -1347,7 +1343,6 @@ if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
     ann=annW
     ann_rbf=ann_rbf1
     ann_rbfm=ann_rbfm1
-} else if (cohort%in%c("_wt906","_mycRas289")) {
 } else {
     ann=annW2
     ann_rbf=ann_rbf2
@@ -1448,7 +1443,6 @@ for (cohort in c("_wt906","_mycRas289")) {
         ann=annW
         ann_rbf=ann_rbf1
         ann_rbfm=ann_rbfm1
-    } else if (cohort%in%c("_wt906","_mycRas289")) {
     } else {
         ann=annW2
         ann_rbf=ann_rbf2

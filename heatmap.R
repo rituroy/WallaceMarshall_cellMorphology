@@ -9,8 +9,8 @@ datVer="w906"
 datVerList=c("w906","w5969")
 datVerList=c("w5969")
 datVerList=c("w906")
-datVerList=c("m289")
 datVerList=c("m289","w906")
+datVerList=c("m289")
 for (datVer in datVerList) {
     if (datVer=="w5969") {load("results/tmp_w5969.RData"); datVer="w5969"}
     
@@ -23,8 +23,6 @@ for (datVer in datVerList) {
     getCorFlag=T
     getCorFlag=F
     
-    annRpart=read.table(paste("rpart.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
-
     library(marray)
     #library(fpc)
     library(NbClust)
@@ -34,9 +32,11 @@ for (datVer in datVerList) {
     #source(paste(dirSrc,"functions/heatmap.5.4.R",sep=""))
     #source(paste(dirSrc,"functions/heatmap.5.5.R",sep=""))
     #source(paste(dirSrc,"functions/heatmapAcgh.7.1.R",sep=""))
-    source(paste(dirSrc,"functions/heatmap.5.6.R",sep=""))
-    source(paste(dirSrc,"functions/heatmapAcgh.7.3.R",sep=""))
-
+    #source(paste(dirSrc,"functions/heatmap.5.6.R",sep=""))
+    #source(paste(dirSrc,"functions/heatmapAcgh.7.3.R",sep=""))
+    source(paste(dirSrc,"functions/heatmap.5.7.R",sep=""))
+    source(paste(dirSrc,"functions/heatmapAcgh.7.4.R",sep=""))
+    
     cohort="_mycRas"
     cohort="_wt"
     cohort="_mycRasWt"
@@ -55,8 +55,8 @@ for (datVer in datVerList) {
     predictionStrengthFlag=F
     classifFlag="averagedist"
     classifFlag="centroid"
-    nbClustFlag=F
     nbClustFlag=T
+    nbClustFlag=F
     
     datadir="results/cor/"
     switch(datVer,
@@ -86,6 +86,7 @@ for (datVer in datVerList) {
     ## NOT working. Check!!! type2Flag=""; typeList=sort(unique(ann$type)); centrFlag=""; scaleList=""
     type2Flag="_reducedBioFeatMean"; typeList=c("",sort(unique(ann$type))); centrFlag=""; scaleList=""
     type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type))); centrFlag=""; scaleList=""
+    type2Flag=""; typeList=c("",sort(unique(ann$type))); centrFlag=""; scaleList=""
     typeList=sort(unique(ann$type))
     typeList=""
     typeList=c("",sort(unique(ann$type)))
@@ -99,7 +100,7 @@ for (datVer in datVerList) {
     
     classDistFlag="euclidean"
     classDistFlag="kendall"
-
+    
     linkMethod="ward.D2"
 
     centrFlag="_noCentering"
@@ -130,6 +131,10 @@ for (datVer in datVerList) {
     subsetList=c("_classSet1Set2MissClassRpart")
     subsetList=c("_classSet1","_classSet1Set2")
     subsetList=c("")
+    
+    
+    if (any(c("_classSet1MissClassRpart","_classSet1Set2MissClassRpart")%in%subsetList)) annRpart=read.table(paste("rpart.txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+    
     
     orderFlag=rep("",2)
     datadir2=rep("",2)
@@ -189,6 +194,7 @@ for (datVer in datVerList) {
     subsetFList=""
     type2Flag=""; typeList=c("",sort(unique(ann$type)))
     type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type)))
+    type2Flag=""; typeList=c("",sort(unique(ann$type)))
     distMethod="pearson"
     distMethod="kendall"
     orderFlag[1]="_wtOrd"; datadir2[1]=paste(sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
@@ -197,10 +203,11 @@ for (datVer in datVerList) {
     
     if (datVer=="m289") {
         orderFlag[1]=""
+        orderFlag[1]="_wt906Ord"; datadir2[1]=""
     } else {
         orderFlag[1]="_mycRas289Ord"; datadir2[1]=""
+        orderFlag[1]=""
     }
-    orderFlag[1]=""
     
     for (orderSam in orderSamList) {
         orderFlag[2]=orderSam
@@ -350,11 +357,11 @@ for (datVer in datVerList) {
                             }
                             nm=""
                             switch(subsetFlag,
-                            "_classSet1"={nm=", set1"},
-                            "_classSet1Set2"={nm=", set1set2"},
-                            "_classSet1MissClass"={nm=", set1MissClassified"},
-                            "_classSet1MissClassRpart"={nm=", set1MissClassified"},
-                            "_classSet1Set2MissClassRpart"={nm=", set1set2MissClassified"}
+                                "_classSet1"={nm=", set1"},
+                                "_classSet1Set2"={nm=", set1set2"},
+                                "_classSet1MissClass"={nm=", set1MissClassified"},
+                                "_classSet1MissClassRpart"={nm=", set1MissClassified"},
+                                "_classSet1Set2MissClassRpart"={nm=", set1set2MissClassified"}
                             )
                             if (nm!="") {
                                 header=sub(cohortName,paste(cohortName,nm,sep=""),header)
@@ -362,10 +369,10 @@ for (datVer in datVerList) {
                             #header=paste(header,", classDist-",classDistFlag,sep="")
                             load("results/class.RData")
                             switch(classDistFlag,
-                            "euclidean"={classDistMat=classDistMatE},
-                            "pearson"={classDistMat=classDistMatP},
-                            "spearman"={classDistMat=classDistMatS},
-                            "kendall"={classDistMat=classDistMatK}
+                                "euclidean"={classDistMat=classDistMatE},
+                                "pearson"={classDistMat=classDistMatP},
+                                "spearman"={classDistMat=classDistMatS},
+                                "kendall"={classDistMat=classDistMatK}
                             )
                             #annSam=data.frame(id=paste("sam",1:nrow(cell),sep=""),sd=sdSam,stringsAsFactors=F)
                             annSam=data.frame(id=rownames(cell),sd=sdSam,stringsAsFactors=F)
@@ -733,24 +740,24 @@ for (datVer in datVerList) {
                             if (sampleBar=="cluster") {
                                 fNameOut4=sub(orderFlag[2],"",sub(orderFlag[1],"",fNameOut))
                                 switch(distMethod,
-                                "pearson"={
-                                    distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
-                                },
-                                "spearman"={
-                                    distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
-                                },
-                                "kendall"={
-                                    if (getCorFlag) {
-                                        corMatSam2=cor(arrayData2,method=distMethod,use="complete.obs")
-                                        save(corMatSam2,file=paste("corMatSam",fNameOut4,".RData",sep=""))
-                                    } else {
-                                        load(file=paste(datadir,"corMatSam",fNameOut4,".RData",sep=""))
+                                    "pearson"={
+                                        distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
+                                    },
+                                    "spearman"={
+                                        distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
+                                    },
+                                    "kendall"={
+                                        if (getCorFlag) {
+                                            corMatSam2=cor(arrayData2,method=distMethod,use="complete.obs")
+                                            save(corMatSam2,file=paste("corMatSam",fNameOut4,".RData",sep=""))
+                                        } else {
+                                            load(file=paste(datadir,"corMatSam",fNameOut4,".RData",sep=""))
+                                        }
+                                        distMat=as.dist(1 - corMatSam2)
+                                    },
+                                    "euclidean"={
+                                        distMat=dist(t(arrayData2), method=distMethod)
                                     }
-                                    distMat=as.dist(1 - corMatSam2)
-                                },
-                                "euclidean"={
-                                    distMat=dist(t(arrayData2), method=distMethod)
-                                }
                                 )
                                 clustC=hclust(distMat, method=linkMethod)
                                 
@@ -777,23 +784,23 @@ for (datVer in datVerList) {
                                     for (gId in 1:length(grpUniq)) {
                                         jj=match(names(fit$cluster)[which(fit$cluster==grpUniq[gId])],colnames(arrayData2))
                                         switch(distMethod,
-                                        "pearson"={
-                                            distMat=as.dist(1 - cor(arrayData2[,jj],method=distMethod,use="complete.obs"))
-                                        },
-                                        "spearman"={
-                                            distMat=as.dist(1 - cor(arrayData2[,jj],method=distMethod,use="complete.obs"))
-                                        },
-                                        "kendall"={
-                                            if (getCorFlag) {
-                                                corMatSam2=cor(arrayData2[,jj],method=distMethod,use="complete.obs")
-                                                #save(corMatSam2,file=paste("corMatSam",fNameOut4,".RData",sep=""))
-                                            } else {
+                                            "pearson"={
+                                                distMat=as.dist(1 - cor(arrayData2[,jj],method=distMethod,use="complete.obs"))
+                                            },
+                                            "spearman"={
+                                                distMat=as.dist(1 - cor(arrayData2[,jj],method=distMethod,use="complete.obs"))
+                                            },
+                                            "kendall"={
+                                                if (getCorFlag) {
+                                                    corMatSam2=cor(arrayData2[,jj],method=distMethod,use="complete.obs")
+                                                    #save(corMatSam2,file=paste("corMatSam",fNameOut4,".RData",sep=""))
+                                                } else {
+                                                }
+                                                distMat=as.dist(1 - corMatSam2)
+                                            },
+                                            "euclidean"={
+                                                distMat=dist(t(arrayData2[,jj]), method=distMethod)
                                             }
-                                            distMat=as.dist(1 - corMatSam2)
-                                        },
-                                        "euclidean"={
-                                            distMat=dist(t(arrayData2[,jj]), method=distMethod)
-                                        }
                                         )
                                         if (distMethod=="kendall" & !getCorFlag) {
                                             #clustInfo=read.table(paste(datadir2[2],fNameOut4,"/clusterInfoSample",paste(fNameOut4,"_",type4Flag,sep=""),".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
@@ -901,24 +908,24 @@ for (datVer in datVerList) {
                                             x=c(x,annFeat$feature[i])
                                         } else {
                                             switch(distMethod,
-                                            "pearson"={
-                                                distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
-                                            },
-                                            "spearman"={
-                                                distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
-                                            },
-                                            "kendall"={
-                                                if (getCorFlag) {
-                                                    corMat2=cor(t(arrayData2),method=distMethod,use="complete.obs")
-                                                    save(corMat2,file=paste("corMat",fNameOut4,".RData",sep=""))
-                                                } else {
-                                                    load(file=paste(datadir,"corMat",fNameOut4,".RData",sep=""))
+                                                "pearson"={
+                                                    distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
+                                                },
+                                                "spearman"={
+                                                    distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
+                                                },
+                                                "kendall"={
+                                                    if (getCorFlag) {
+                                                        corMat2=cor(t(arrayData2),method=distMethod,use="complete.obs")
+                                                        save(corMat2,file=paste("corMat",fNameOut4,".RData",sep=""))
+                                                    } else {
+                                                        load(file=paste(datadir,"corMat",fNameOut4,".RData",sep=""))
+                                                    }
+                                                    distMat=as.dist(1 - corMat2)
+                                                },
+                                                "euclidean"={
+                                                    distMat=dist(arrayData2, method=distMethod)
                                                 }
-                                                distMat=as.dist(1 - corMat2)
-                                            },
-                                            "euclidean"={
-                                                distMat=dist(arrayData2, method=distMethod)
-                                            }
                                             )
                                             clustR=hclust(distMat, method=linkMethod)
                                             x=c(x,clustR$labels[clustR$order])
@@ -966,24 +973,24 @@ for (datVer in datVerList) {
                                         }
                                         if (geneBar=="clusterPr") {
                                             switch(distMethod,
-                                            "pearson"={
-                                                distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
-                                            },
-                                            "spearman"={
-                                                distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
-                                            },
-                                            "kendall"={
-                                                if (getCorFlag) {
-                                                    corMat2=cor(t(arrayData2),method=distMethod,use="complete.obs")
-                                                    save(corMat2,file=paste("corMat",fNameOut4,".RData",sep=""))
-                                                } else {
-                                                    load(file=paste(datadir,"corMat",fNameOut4,".RData",sep=""))
+                                                "pearson"={
+                                                    distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
+                                                },
+                                                "spearman"={
+                                                    distMat=as.dist(1 - cor(t(arrayData2),method=distMethod,use="complete.obs"))
+                                                },
+                                                "kendall"={
+                                                    if (getCorFlag) {
+                                                        corMat2=cor(t(arrayData2),method=distMethod,use="complete.obs")
+                                                        save(corMat2,file=paste("corMat",fNameOut4,".RData",sep=""))
+                                                    } else {
+                                                        load(file=paste(datadir,"corMat",fNameOut4,".RData",sep=""))
+                                                    }
+                                                    distMat=as.dist(1 - corMat2)
+                                                },
+                                                "euclidean"={
+                                                    distMat=dist(t(arrayData2), method=distMethod)
                                                 }
-                                                distMat=as.dist(1 - corMat2)
-                                            },
-                                            "euclidean"={
-                                                distMat=dist(t(arrayData2), method=distMethod)
-                                            }
                                             )
                                             clustR=hclust(distMat, method=linkMethod)
                                         } else {
@@ -1345,6 +1352,55 @@ dev.off()
 
 png("nbClust_ColorBarLegend.png")
 sampleColorLegend(tls=grpUniq,col=colList,legendTitle="Best number of clusters from")
+dev.off()
+
+####################################################################
+####################################################################
+## MDS plot
+
+source(paste(dirSrc,"functions/heatmapAcgh.7.4.R",sep=""))
+
+cohort="_wt906"
+typeList=c("",sort(unique(ann$type)))
+typeFlag="nucleus"
+ordFlag="wtOrd"
+distMethod="kendall"
+
+nClust=5
+
+switch(cohort,
+    "_wt906"={
+        cohortName="Wildtype 906"
+    },
+    "_mycRas289"={
+        cohortName="Myc/Ras 289"
+    }
+)
+colId=paste("clustId_",nClust,sep="")
+for (typeFlag in typeList) {
+    datadir="results/wt906mycRas289/"
+    load(paste(datadir,"corMatSam",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,".RData",sep=""))
+    datadir=paste("results/wt906mycRas289/heatmap/",sub("_","",cohort),"/",ordFlag,"/",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,"/",sep="")
+    clustInfo=read.table(paste(datadir,"clusterInfoSample",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+    clustInfo=clustInfo[match(colnames(corMatSam2),clustInfo$id),]
+    header=paste(cohortName,", ",ifelse(typeFlag=="","all features",typeFlag),sep="")
+    colList=c("brown","red","orange","yellow","green","cyan","skyblue","blue","pink","magenta","purple","darkgreen")
+    clustInfo$col=rep("black",ncol(corMatSam2))
+    clustInfo$col=colList[match(clustInfo[,colId],paste("cluster",1:length(colList),sep=""))]
+    dat=as.dist(1-abs(corMatSam2))
+    mds1=cmdscale(dat, k = 2)
+    clustInfo=clustInfo[match(rownames(mds1),clustInfo$id),]
+
+    png(paste("mdsPlot_corMatSam",cohort,typeFlag,"_",distMethod,".png",sep=""))
+    plot(mds1[,1], mds1[,2], type = "p", xlab = "MDS1", ylab = "MDS2", axes = T, main = paste(header,": MDS plot of samples",sep=""),col=clustInfo$col)
+    #plot(mds1[,1], mds1[,2], type = "n", xlab = "", ylab = "", axes = FALSE, main = "cmdscale (stats)")
+    #text(mds1[,1], mds1[,2], labels(dat), cex = 0.9, xpd = TRUE)
+    dev.off()
+}
+
+grpUniq=paste("cluster",1:nClust,sep="")
+png(paste("mdsPlotSampleColorBarLegend_heatmapClusters.png",sep=""))
+sampleColorLegend(tls=grpUniq,col=colList[1:length(grpUniq)],legendTitle="Heatmap clusters")
 dev.off()
 
 ####################################################################

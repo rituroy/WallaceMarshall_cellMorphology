@@ -1,13 +1,14 @@
-minCPS=2; maxCPS=3; nPermPS=3
-minCPS=2; maxCPS=15; nPermPS=100
 minCPS=10; maxCPS=15; nPermPS=100
 minCPS=10; maxCPS=15; nPermPS=10
 minCPS=10; maxCPS=15; nPermPS=20
+minCPS=2; maxCPS=3; nPermPS=3
+minCPS=2; maxCPS=15; nPermPS=100
 
 
 ####################################################################
 ####################################################################
 
+#The prediction strength for each of the clusterings is the mean (in prediction.strength(), it is minimum) (taken over all clusters) relative frequency of correctly predicted pairs of points of that cluster.
 prediction.strengthMean=function (xdata, Gmin = 2, Gmax = 10, M = 50, clustermethod = kmeansCBI,
 classification = "centroid", cutoff = 0.8, nnk = 1, distances = inherits(xdata,
 "dist"), count = FALSE, ...)
@@ -54,7 +55,8 @@ classification = "centroid", cutoff = 0.8, nnk = 1, distances = inherits(xdata,
             }
             ps <- matrix(0, nrow = 2, ncol = k)
             for (i in 1:2) {
-                ctable <- table(clusterings[[i]]$partition, classifications[[i]])
+                #ctable <- table(clusterings[[i]]$partition, classifications[[i]])
+                ctable <- xtable(clusterings[[i]]$partition, classifications[[i]])
                 for (kk in 1:k) {
                     ps[i, kk] <- sum(ctable[kk, ]^2 - ctable[kk,
                     ])
@@ -92,9 +94,10 @@ library(fpc)
 #source(paste(dirSrc,"functions/heatmap.5.R",sep=""))
 #source(paste(dirSrc,"functions/heatmapAcgh.7.R",sep=""))
 
-cohort="_wt"
 cohort="_mycRas"
 cohort="_mycRasWt"
+cohort="_wt"
+cohort="_wt906"
 
 classifFlag="averagedist"
 classifFlag="centroid"
@@ -108,8 +111,8 @@ if (predStrFlag=="_mean") {
     predictionStrengthThis=prediction.strength
 }
 
-datadir=""
 datadir="results/"
+datadir=""
 
 typeFlag="cell"
 
@@ -139,6 +142,7 @@ type2Flag="_reducedBioFeatPC"; typeList=c("",sort(unique(ann$type))); centrFlag=
 typeList=""
 typeList=c("",sort(unique(ann$type)))
 typeList=sort(unique(ann$type))
+type2Flag=""; typeList=c("",sort(unique(ann$type)))
 
 outFormat="pdf"
 outFormat="png"
@@ -146,8 +150,8 @@ outFormat="png"
 sampleBar=""
 sampleBar="cluster"
 
-distMethod="pearson"
 distMethod="spearman"
+distMethod="pearson"
 distMethod="kendall"
 
 linkMethod="ward.D2"
@@ -173,7 +177,8 @@ orderFlag=""
 datadir2=paste("results/heatmap/",sub("_","",sub("Ord","",orderFlag)),"/",sub("_","",orderFlag),"/",sub("_","",type2Flag),"/",sep="")
 
 #for (cohort in c("_mycRas","_mycRasWt","_wt")) {
-for (cohort in c("_mycRasWt")) {
+#for (cohort in c("_mycRasWt")) {
+for (cohort in c("_wt906")) {
     for (sepFClustFlag in c(F)) {
     #for (sepFClustFlag in c(F,T)) {
         if (sepFClustFlag) {
@@ -212,6 +217,28 @@ for (cohort in c("_mycRasWt")) {
             sdSamMn=sdSamMnMW
             sdFeatPc=sdFeatPcMW
             sdFeatMn=sdFeatMnMW
+        },
+        "_wt906"={
+            cohortName="Wildtype 906"
+            cell=cellW2
+            annCell=annCellW2
+            cell_rbf=cell_rbfW2
+            cell_rbfm=cell_rbfmW2
+            sdSamPc=sdSamPcW2
+            sdSamMn=sdSamMnW2
+            sdFeatPc=sdFeatPcW2
+            sdFeatMn=sdFeatMnW2
+        },
+        "_mycRas289"={
+            cohortName="Myc/Ras 289"
+            cell=cellM2
+            annCell=annCellM2
+            cell_rbf=cell_rbfM2
+            cell_rbfm=cell_rbfmM2
+            sdSamPc=sdSamPcM2
+            sdSamMn=sdSamMnM2
+            sdFeatPc=sdFeatPcM2
+            sdFeatMn=sdFeatMnM2
         }
         )
         if (type2Flag=="_reducedBioFeatPC") {
@@ -223,7 +250,17 @@ for (cohort in c("_mycRasWt")) {
         } else {
             sdFeat=sdSam=rep(NA,nrow(cell))
         }
-
+        if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
+            #ann=annW
+            #ann_rbf=ann_rbf1
+            #ann_rbfm=ann_rbfm1
+        } else {
+            #ann=annW2
+            #ann_rbf=ann_rbf2
+            #ann_rbfm=ann_rbfm2
+            featId1=1:nrow(ann)
+        }
+        
         for (typeFlag in typeList) {
             if (typeFlag=="" & sepFClustFlag) {
                 cat("Cannot run typeFlag=='' & sepFClustFlag!\n")
@@ -476,13 +513,13 @@ for (cohort in c("_mycRasWt")) {
                     if (sampleBar=="cluster") {
                         fNameOut4=sub(orderFlag,"",fNameOut)
                         switch(distMethod,
-                               "pearson"={
+                            "pearson"={
                                distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
-                               },
-                               "spearman"={
+                           },
+                           "spearman"={
                                distMat=as.dist(1 - cor(arrayData2,method=distMethod,use="complete.obs"))
-                               },
-                               "kendall"={
+                           },
+                           "kendall"={
                                if (getCorFlag) {
                                     corMatSam2=cor(arrayData2,method=distMethod,use="complete.obs")
                                     save(corMatSam2,file=paste("corMatSam",fNameOut4,".RData",sep=""))
@@ -490,11 +527,11 @@ for (cohort in c("_mycRasWt")) {
                                     load(file=paste(datadir,"corMatSam",fNameOut4,".RData",sep=""))
                                }
                                distMat=as.dist(1 - corMatSam2)
-                               },
-                               "euclidean"={
+                           },
+                           "euclidean"={
                                distMat=dist(arrayData2, method=distMethod)
-                               }
-                               )
+                           }
+                        )
                         clustC=hclust(distMat, method=linkMethod)
                     } else {
                         clustC=NA
@@ -539,7 +576,7 @@ for (cohort in c("_mycRasWt")) {
                         } else {
                             type3List=typeFlag
                         }
-            #			par(mfrow=c(length(type3List),1))
+                        #par(mfrow=c(length(type3List),1))
                         for (type3Flag in type3List) {
                             if (sepFClustFlag & type2Flag%in%c("_reducedBioFeatPC","_reducedBioFeatMean")) {
                                 fNameOut2=paste(fNameOut,"_",type3Flag,sep="")
@@ -550,7 +587,7 @@ for (cohort in c("_mycRasWt")) {
                             if (typeFlag=="") i=1:nrow(annColAll) else i=which(annColAll$type==type3Flag)
                             arrayData=arrayData2=arrayDataAll[i,]
                             annCol=annColAll[i,]
-            #				if (!sepFClustFlag & type2Flag%in%c("_reducedBioFeatPC","_reducedBioFeatMean")) {
+                            #if (!sepFClustFlag & type2Flag%in%c("_reducedBioFeatPC","_reducedBioFeatMean")) {
                             if (!sepFClustFlag & typeFlag!="" & type2Flag%in%c("","_reducedBioFeatPC","_reducedBioFeatMean")) {
                                 arrayData=arrayDataAll
                                 annCol=annColAll
