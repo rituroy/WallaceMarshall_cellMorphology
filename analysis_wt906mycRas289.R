@@ -19,6 +19,22 @@ capWords=function(s, strict=FALSE) {
     sep="", collapse=" " )
     sapply(strsplit(s, split=" "), cap, USE.NAMES=!is.null(names(s)))
 }
+doCentering=function(x) {
+    arrayData=t(x)
+    centr=apply(arrayData,1,median,na.rm=T)
+    for (i in 1:nrow(arrayData)) {
+        arrayData[i,]=arrayData[i,]-centr[i]
+    }
+    t(arrayData)
+}
+doScaling=function(x) {
+    arrayData=t(x)
+    scal=apply(arrayData,1,sd,na.rm=T)
+    for (i in 1:nrow(arrayData)) {
+        arrayData[i,]=arrayData[i,]/scal[i]
+    }
+    t(arrayData)
+}
 
 ####################################################################
 ####################################################################
@@ -395,9 +411,10 @@ if (T) {
 }
 
 datadir="results/"
-datadir=""
 datadir="results/wt906mycRas289/"
 datadir="results/wt906mycRas289/cor/wt906/absMedCentered/"
+datadir="results/wt906mycRas289_noCorr/"
+datadir=""
 sumInfo=read.table(paste(datadir,"summaryFeature",cohort,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
 load(file=paste(datadir,"corMat",transFlag,".RData",sep=""))
 load(file=paste(datadir,"corMatSam",transFlag,".RData",sep=""))
@@ -581,6 +598,35 @@ plot(cell[,i1],cell[,i2],xlab=ann$feature[i1],ylab=ann$feature[i2],pch=20,cex=.5
 points(cell1[,i1],cell1[,i2],pch=20,cex=.5,col="red")
 sampleColorLegend(tls=c("Abs(median centered data","Raw data"),col=c("green","red"),legendTitle="")
 dev.off()
+
+## --------------------
+## Exclude these as per Amy's email 10/22/18
+
+i=order(abs(corInfo$corKend),decreasing=T)
+type=ann$type[match(corInfo$feature1,ann$feature)]
+tbl=cbind(corInfo,type1=type,stringsAsFactors=F)[i,]
+x=unique(c(tbl$feature2[which(tbl$type1=="cell")][1:5],tbl$feature2[which(tbl$type1=="mitochondria")][1:2],tbl$feature2[which(tbl$type1=="nucleus")][1:5]))
+
+featId=which(!ann$feature%in%x)
+annW2=annW2[featId,]
+#ann_rbf2
+#ann_rbfm2
+cellW2=cellW2[,featId]
+#annCellW2
+#cell_rbfW2
+#cell_rbfmW2
+#sdSamPcW2
+#sdSamMnW2
+#sdFeatPcW2
+#sdFeatMnW2
+cellM2=cellM2[,featId]
+#annCellM2
+#cell_rbfM2
+#cell_rbfmM2
+#sdSamPcM2
+#sdSamMnM2
+#sdFeatPcM2
+#sdFeatMnM2
 
 ####################################################################
 ####################################################################
@@ -1215,6 +1261,8 @@ for (cohort in c("_wt906","_mycRas289")) {
 }
 
 save.image("tmp.RData")
+
+save(dirSrc,capWords,doCentering,doScaling,annW2,ann_rbf2,ann_rbfm2,cellW2,annCellW2,cell_rbfW2,cell_rbfmW2,sdSamPcW2,sdSamMnW2,sdFeatPcW2,sdFeatMnW2,cellM2,annCellM2,cell_rbfM2,cell_rbfmM2,sdSamPcM2,sdSamMnM2,sdFeatPcM2,sdFeatMnM2,file="data.RData")
 
 ####################################################################
 ####################################################################

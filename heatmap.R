@@ -1,16 +1,20 @@
-## Set params:
+ ## Set params:
 ## sepFClustFlag, getCorFlag, orderFlag, typeList, type2Flag, cohortList, datVerList
+
+setwd("/Users/royr/UCSF/WallaceMarshall")
 
 ####################################################################
 ####################################################################
-#load("results/tmp_w3830.RData"); datVer="w3830"
-load("results/tmp_w5969.RData")
+##load("results/tmp_w3830.RData"); datVer="w3830"
+#load("results/tmp_w5969.RData")
+load("data.RData")
+#load("tmp_wt906mycRas289.RData")
 datVer="w906"
 datVerList=c("w906","w5969")
 datVerList=c("w5969")
 datVerList=c("w906")
-datVerList=c("m289","w906")
-datVerList=c("m289")
+datVerList=c("w906","m289")
+datVerList=c("w906m289")
 for (datVer in datVerList) {
     if (datVer=="w5969") {load("results/tmp_w5969.RData"); datVer="w5969"}
     
@@ -20,8 +24,8 @@ for (datVer in datVerList) {
     sepFClustFlag=T ## NOT USED for typeFlag=""
     sepFClustFlag=F
     
-    getCorFlag=T
     getCorFlag=F
+    getCorFlag=T
     
     library(marray)
     #library(fpc)
@@ -65,13 +69,21 @@ for (datVer in datVerList) {
         },
         "w906"={
             datadir="results/wt906/cor/"
+            ann=annW2
         },
         "m289"={
             datadir="results/mycRas289/cor/"
+            ann=annW2
+        },
+        "w906m289"={
+            datadir="results/wt906mycRas289/cor/"
+            ann=annW2
         }
     )
     datadir=""
-
+    datadir="results/wt906mycRas289/"
+    datadir="results/wt906mycRas289_noCorr/"
+    
     typeFlag="cell"
     
     type2Flag="_noisyFeat"; typeList=""; centrFlag=""; scaleList=""
@@ -95,22 +107,29 @@ for (datVer in datVerList) {
     sampleBar="cluster"
 
     distMethod="spearman"
-    distMethod="pearson"
     distMethod="kendall"
+    distMethod="pearson"
     
     classDistFlag="euclidean"
     classDistFlag="kendall"
+    classDistFlag=""
     
     linkMethod="ward.D2"
 
     centrFlag="_noCentering"
+    centrFlag="_centered"
     centrFlag=""
-
+    centrFlag="_centerByType"
+    
     scaleList=c("","_noScaling")
+    scaleList=c("_scaled")
+    scaleList=c("_scaleByType")
     scaleList=c("")
     scaleFlag="_noScaling"
+    scaleFlag="_scaled"
+    scaleFlag="_scaleByType"
     scaleFlag=""
-
+    
     outFormat="pdf"
     outFormat="png"
 
@@ -153,6 +172,9 @@ for (datVer in datVerList) {
         },
         "m289"={
             datadir2[1]=paste("results/mycRas289/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
+        },
+        "w906m289"={
+            datadir2[1]=paste("results/wt906mycRas289/heatmap/",sub("_","",sub("Ord","",orderFlag[1])),"/",sub("_","",orderFlag[1]),"/",sub("_","",type2Flag),"/",sep="")
         }
     )
 
@@ -167,6 +189,9 @@ for (datVer in datVerList) {
         },
         "m289"={
             datadir2[2]=paste("results/mycRas289/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
+        },
+        "w906m289"={
+            datadir2[2]=paste("results/wt906mycRas289/heatmap/",sub("_","",cohort),"/kmeans/",sep="")
         }
     )
     orderFlag[2]=""
@@ -189,6 +214,9 @@ for (datVer in datVerList) {
         },
         "m289"={
             cohortList=c("_mycRas289")
+        },
+        "w906m289"={
+            cohortList=c("_wt906mycRas289")
         }
     )
     subsetFList=""
@@ -265,6 +293,28 @@ for (datVer in datVerList) {
                         sdSamMn=sdSamMnW2
                         sdFeatPc=sdFeatPcW2
                         sdFeatMn=sdFeatMnW2
+                        if (centrFlag=="_centered") {
+                            j=1:nrow(cellW2)
+                            cell=doCentering(rbind(cellW2,cellM2))
+                            cell_rbf=doCentering(rbind(cell_rbfW2,cell_rbfM2))
+                            cell_rbfm=doCentering(rbind(cell_rbfmW2,cell_rbfmM2))
+                            if (scaleFlag=="_scaled") {
+                                cell=doScaling(cell)[j,]
+                                cell_rbf=doScaling(cell_rbf)[j,]
+                                cell_rbfm=doScaling(cell_rbfm)[j,]
+                            } else {
+                                cell=cell[j,]
+                                cell_rbf=cell_rbf[j,]
+                                cell_rbfm=cell_rbfm[j,]
+                            }
+                        } else {
+                            if (scaleFlag=="_scaled") {
+                                j=1:nrow(cellW2)
+                                cell=doScaling(rbind(cellW2,cellM2))[j,]
+                                cell_rbf=doScaling(rbind(cell_rbfW2,cell_rbfM2))[j,]
+                                cell_rbfm=doScaling(rbind(cell_rbfmW2,cell_rbfmM2))[j,]
+                            }
+                        }
                     },
                     "_mycRas289"={
                         cohortName="Myc/Ras 289"
@@ -276,6 +326,49 @@ for (datVer in datVerList) {
                         sdSamMn=sdSamMnM2
                         sdFeatPc=sdFeatPcM2
                         sdFeatMn=sdFeatMnM2
+                        if (centrFlag=="_centered") {
+                            j=nrow(cellW2)+(1:nrow(cellM2))
+                            cell=doCentering(rbind(cellW2,cellM2))
+                            cell_rbf=doCentering(rbind(cell_rbfW2,cell_rbfM2))
+                            cell_rbfm=doCentering(rbind(cell_rbfmW2,cell_rbfmM2))
+                            if (scaleFlag=="_scaled") {
+                                cell=doScaling(cell)[j,]
+                                cell_rbf=doScaling(cell_rbf)[j,]
+                                cell_rbfm=doScaling(cell_rbfm)[j,]
+                            } else {
+                                cell=cell[j,]
+                                cell_rbf=cell_rbf[j,]
+                                cell_rbfm=cell_rbfm[j,]
+                            }
+                        } else {
+                            if (scaleFlag=="_scaled") {
+                                j=nrow(cellW2)+(1:nrow(cellM2))
+                                cell=doScaling(rbind(cellW2,cellM2))[j,]
+                                cell_rbf=doScaling(rbind(cell_rbfW2,cell_rbfM2))[j,]
+                                cell_rbfm=doScaling(rbind(cell_rbfmW2,cell_rbfmM2))[j,]
+                            }
+                        }
+                    },
+                    "_wt906mycRas289"={
+                        cohortName="Wildtype 906 + Myc/Ras 289"
+                        cell=rbind(cellW2,cellM2)
+                        annCell=rbind(cbind(annCellW2,type=rep("wildtype",nrow(annCellW2)),stringsAsFactors=F),cbind(annCellM2,type=rep("myc/ras",nrow(annCellM2)),stringsAsFactors=F))
+                        cell_rbf=NULL
+                        cell_rbfm=NULL
+                        sdSamPc=NULL
+                        sdSamMn=NULL
+                        sdFeatPc=NULL
+                        sdFeatMn=NULL
+                        if (centrFlag=="_centerByType") {
+                            cell1=doCentering(cellW2)
+                            cell2=doCentering(cellM2)
+                        }
+                        if (scaleFlag=="_scaleByType") {
+                            cell1=doScaling(cell1)
+                            cell2=doScaling(cell2)
+                        }
+                        cell=rbind(cell1,cell2)
+                        rm(cell1,cell2)
                     }
                 )
                 if (cohort%in%c("_mycRas","_wt","_mycRasWt")) {
@@ -366,18 +459,23 @@ for (datVer in datVerList) {
                             if (nm!="") {
                                 header=sub(cohortName,paste(cohortName,nm,sep=""),header)
                             }
-                            #header=paste(header,", classDist-",classDistFlag,sep="")
-                            load("results/class.RData")
-                            switch(classDistFlag,
-                                "euclidean"={classDistMat=classDistMatE},
-                                "pearson"={classDistMat=classDistMatP},
-                                "spearman"={classDistMat=classDistMatS},
-                                "kendall"={classDistMat=classDistMatK}
-                            )
+                            if (classDistFlag!="") {
+                                #header=paste(header,", classDist-",classDistFlag,sep="")
+                                load("results/class.RData")
+                                switch(classDistFlag,
+                                    "euclidean"={classDistMat=classDistMatE},
+                                    "pearson"={classDistMat=classDistMatP},
+                                    "spearman"={classDistMat=classDistMatS},
+                                    "kendall"={classDistMat=classDistMatK}
+                                )
+                            }
                             #annSam=data.frame(id=paste("sam",1:nrow(cell),sep=""),sd=sdSam,stringsAsFactors=F)
                             annSam=data.frame(id=rownames(cell),sd=sdSam,stringsAsFactors=F)
                             j=match(annSam$id,annCell$id); j1=which(!is.na(j)); j2=j[j1]
                             if (length(j1)!=0) {
+                                if (cohort%in%c("_wt906mycRas289")) {
+                                    annSam$type[j1]=annCell$type[j2]
+                                }
                                 #annSam$class=""
                                 #annSam$class[j1]=annCell$class[j2]
                                 annSam$set1Class=""
@@ -391,17 +489,19 @@ for (datVer in datVerList) {
                                 #annSam$set2Class[j1]=sub("class","",annCell$class[j2])
                                 annSam$set2Class[j1]=sub("class","",paste("class",annCell$class[j2],sep=""))
                             }
-                            j=match(annSam$id,rownames(classDistMat)); j1=which(!is.na(j)); j2=j[j1]
-                            if (any(!is.na(j))) {
-                                tmp=matrix(nrow=nrow(annSam),ncol=ncol(classDistMat),dimnames=list(annSam$id,paste("dist2",colnames(classDistMat),sep="")))
-                                tmp[j1,]=classDistMat[j2,]
-                                tmp[j1,]=t(apply(classDistMat[j2,],1,function(x) {
-                                    y=order(order(x))
-                                    y[is.na(x)]=NA
-                                    y
-                                }))
-                                colnames(tmp)=paste("set1",capWords(colnames(tmp)),sep="")
-                                annSam=cbind(annSam,tmp)
+                            if (classDistFlag!="") {
+                                j=match(annSam$id,rownames(classDistMat)); j1=which(!is.na(j)); j2=j[j1]
+                                if (any(!is.na(j))) {
+                                    tmp=matrix(nrow=nrow(annSam),ncol=ncol(classDistMat),dimnames=list(annSam$id,paste("dist2",colnames(classDistMat),sep="")))
+                                    tmp[j1,]=classDistMat[j2,]
+                                    tmp[j1,]=t(apply(classDistMat[j2,],1,function(x) {
+                                        y=order(order(x))
+                                        y[is.na(x)]=NA
+                                        y
+                                    }))
+                                    colnames(tmp)=paste("set1",capWords(colnames(tmp)),sep="")
+                                    annSam=cbind(annSam,tmp)
+                                }
                             }
                             
                             varFList="featRatio"
@@ -429,6 +529,9 @@ for (datVer in datVerList) {
                                     varList=c(varList,"set2Class")
                                     varName=c(varName,paste(c("set2Class")," ",sep=""))
                                 }
+                            } else if (cohort=="_wt906mycRas289") {
+                                varList="type"
+                                varName="type "
                             }
                             if (F) {
                                 j=grep("Dist2class",names(annSam))
@@ -440,13 +543,11 @@ for (datVer in datVerList) {
                                 }
                             }
                             
-                            cat("\n\n=========== 60 ",fNameOut,"\nnClust[2] ",nClust[2],"\n",sep="")
-
                             if (type2Flag%in%c("_reducedFeatPC_PC","_reducedFeatPC","_reducedFeatMean","_noisyFeat")) {
                                 limit1=c(-2,2)
                                 nClust=c(NA,NA)
                             } else {
-                                if (scaleFlag=="") {
+                                if (scaleFlag%in%c("","_scaled","_scaleByType")) {
                                     limit1=c(-2,2)
                                 } else {
                                     limit1=c(-4*10^5,4*10^5)
@@ -487,6 +588,8 @@ for (datVer in datVerList) {
                                     i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                     arrayData[i2,]=t(cell[,i1])
                                     limit1=c(-2,2)
+                                } else if (centrFlag%in%c("_centered","_centerByType")) {
+                                    limit1=c(-2,2)
                                 } else {
                                     limit1=c(-0.5,0.5)
                                 }
@@ -516,6 +619,8 @@ for (datVer in datVerList) {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
                                         limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
+                                        limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
                                         if (typeFlag%in%c("mitochondria","nucleus")) {
@@ -533,6 +638,8 @@ for (datVer in datVerList) {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
                                         limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
+                                        limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
                                         if (typeFlag%in%c("mitochondria","nucleus")) {
@@ -548,6 +655,8 @@ for (datVer in datVerList) {
                                     if (centrFlag=="") {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
+                                        limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
                                         limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
@@ -565,6 +674,8 @@ for (datVer in datVerList) {
                                     if (centrFlag=="") {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
+                                        limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
                                         limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
@@ -589,6 +700,8 @@ for (datVer in datVerList) {
                                     if (centrFlag=="") {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
+                                        limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
                                         limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
@@ -617,6 +730,8 @@ for (datVer in datVerList) {
                                     if (centrFlag=="") {
                                         i=match(colnames(cell),rownames(arrayData)); i1=which(!is.na(i)); i2=i[i1]
                                         arrayData[i2,]=t(cell[,i1])
+                                        limit1=c(-2,2)
+                                    } else if (centrFlag%in%c("_centered","_centerByType")) {
                                         limit1=c(-2,2)
                                     } else {
                                         limit1=c(-0.5,0.5)
@@ -1301,7 +1416,7 @@ png("nbClust.png",width=2*480, height=1*480)
 par(mar=c(5, 4, 4, 2) + 0.1)
 par(mar=c(7, 4, 4, 2) + 0.1)
 datadir="/Users/royr/UCSF/WallaceMarshall/results/nbClust/"
-datVerList=c("m289","w906")
+datVerList=c("m289","w906","w906m289")
 kk=1
 grpUniq=c()
 for (datVer in datVerList) {
@@ -1316,6 +1431,9 @@ for (datVer in datVerList) {
     },
     "m289"={
         cohortList=c("_mycRas289")
+    },
+    "w906m289"={
+        cohortList=c("_wt906mycRas289")
     }
     )
     typeList=c("",sort(unique(ann$type)))
@@ -1379,8 +1497,9 @@ switch(cohort,
 colId=paste("clustId_",nClust,sep="")
 for (typeFlag in typeList) {
     datadir="results/wt906mycRas289/"
+    datadir="results/wt906mycRas289_noCorr/"
     load(paste(datadir,"corMatSam",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,".RData",sep=""))
-    datadir=paste("results/wt906mycRas289/heatmap/",sub("_","",cohort),"/",ordFlag,"/",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,"/",sep="")
+    datadir=paste(datadir,"heatmap/",sub("_","",cohort),"/",ordFlag,"/",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,"/",sep="")
     clustInfo=read.table(paste(datadir,"clusterInfoSample",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
     clustInfo=clustInfo[match(colnames(corMatSam2),clustInfo$id),]
     header=paste(cohortName,", ",ifelse(typeFlag=="","all features",typeFlag),sep="")
@@ -1402,6 +1521,25 @@ grpUniq=paste("cluster",1:nClust,sep="")
 png(paste("mdsPlotSampleColorBarLegend_heatmapClusters.png",sep=""))
 sampleColorLegend(tls=grpUniq,col=colList[1:length(grpUniq)],legendTitle="Heatmap clusters")
 dev.off()
+
+####################################################################
+####################################################################
+## Compare wt & myc/ras proportions in clusters
+
+cohort="_wt906mycRas289"
+
+distMethod="kendall"
+typeFlag=""
+
+datadir=paste("results/wt906mycRas289_noCorr/heatmap/centerByType/",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_centerByType_scaleByType_",distMethod,"/",sep="")
+clustInfo=read.table(paste(datadir,"clusterInfoSample",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_centerByType_scaleByType_",distMethod,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+x=as.matrix(table(clustInfo$clustId_5,clustInfo$type))
+cbind(round(x[,1]/sum(x[,1]),2),round(x[,2]/sum(x[,2]),2))
+
+datadir=paste("results/wt906mycRas289_noCorr/heatmap/centerTogether/",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,"/",sep="")
+clustInfo=read.table(paste(datadir,"clusterInfoSample",cohort,ifelse(typeFlag=="","","_"),typeFlag,"_",distMethod,".txt",sep=""),sep="\t",h=T,quote="",comment.char="",as.is=T,fill=T)
+x=as.matrix(table(clustInfo$clustId_5,clustInfo$type))
+cbind(round(x[,1]/sum(x[,1]),2),round(x[,2]/sum(x[,2]),2))
 
 ####################################################################
 ####################################################################
